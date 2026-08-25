@@ -26,7 +26,7 @@ export default function TravelPlanner() {
   const [checklistInput, setChecklistInput] = useState('');
   const [noteForm, setNoteForm] = useState({ title: '', content: '' });
 
-  // --- PASSENGER / BOOKER INFO STATE (CẬP NHẬT MỚI) ---
+  // --- PASSENGER / BOOKER INFO STATE ---
   const [passengerForm, setPassengerForm] = useState({ fullName: '', idCard: '', phone: '', email: '', docImage: '' });
 
   // --- PAYMENTS & CURRENCY ---
@@ -104,7 +104,7 @@ export default function TravelPlanner() {
       destination: tripForm.destination,
       budget: Number(tripForm.budget) || 0,
       startDate: tripForm.startDate || '',
-      passengers: [], // Khởi tạo danh sách hành khách
+      passengers: [],
       locations: [],
       expenses: [],
       checklist: [
@@ -162,24 +162,9 @@ export default function TravelPlanner() {
   const handleAddExpense = (e) => {
     e.preventDefault();
     if (!selectedTrip || !expenseForm.title || !expenseForm.amount) return;
-    const newExpense = {
-      id: Date.now(),
-      title: expenseForm.title,
-      amount: Number(expenseForm.amount),
-      method: expenseForm.method,
-      bank: expenseForm.bank,
-      accountNo: expenseForm.accountNo,
-      paid: false,
-      date: new Date().toLocaleDateString('vi-VN')
-    };
-    const updated = { ...selectedTrip, expenses: [...selectedTrip.expenses, newExpense] };
+    const updated = { ...selectedTrip, expenses: [...selectedTrip.expenses, { id: Date.now(), title: expenseForm.title, amount: Number(expenseForm.amount), method: expenseForm.method, bank: expenseForm.bank, accountNo: expenseForm.accountNo }] };
     updateCurrentTrip(updated);
     setExpenseForm({ title: '', amount: '', method: 'Tiền mặt', bank: 'MBBank', accountNo: '' });
-  };
-
-  const toggleExpenseStatus = (expId) => {
-    const updatedExpenses = selectedTrip.expenses.map(e => e.id === expId ? { ...e, paid: !e.paid } : e);
-    updateCurrentTrip({ ...selectedTrip, expenses: updatedExpenses });
   };
 
   const handleAddChecklist = (e) => {
@@ -191,14 +176,14 @@ export default function TravelPlanner() {
   };
 
   const toggleChecklist = (id) => {
-    const updatedChecklist = selectedTrip.checklist.map(item => item.id === id ? { ...item, done: !item.done } : item);
-    updateCurrentTrip({ ...selectedTrip, checklist: updatedChecklist });
+    const updated = { ...selectedTrip, checklist: selectedTrip.checklist.map(item => item.id === id ? { ...item, done: !item.done } : item) };
+    updateCurrentTrip(updated);
   };
 
   const handleAddNote = (e) => {
     e.preventDefault();
     if (!selectedTrip || !noteForm.title) return;
-    const updated = { ...selectedTrip, notes: [...selectedTrip.notes, { id: Date.now(), ...noteForm }] };
+    const updated = { ...selectedTrip, notes: [...selectedTrip.notes, { id: Date.now(), title: noteForm.title, content: noteForm.content }] };
     updateCurrentTrip(updated);
     setNoteForm({ title: '', content: '' });
   };
@@ -207,8 +192,8 @@ export default function TravelPlanner() {
     window.print();
   };
 
-  // Calculations & Helpers
-  const totalSpent = selectedTrip ? selectedTrip.expenses.reduce((sum, item) => sum + item.amount, 0) : 0;
+  // Calculations
+  const totalSpent = selectedTrip ? selectedTrip.expenses.reduce((acc, curr) => acc + curr.amount, 0) : 0;
   const filteredTrips = trips.filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const getDaysLeft = (startDateStr) => {
@@ -217,7 +202,7 @@ export default function TravelPlanner() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // ================= AUTH VIEW =================
+  // ================= AUTH VIEW (LINK GITHUB ĐẶT Ở NGOÀI) =================
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex flex-col justify-center items-center p-4">
@@ -282,12 +267,26 @@ export default function TravelPlanner() {
               {isLoginView ? 'Đăng ký' : 'Đăng nhập'}
             </button>
           </div>
+
+          {/* LINK GITHUB HIỂN THỊ TẠI ĐÂY */}
+          <div className="mt-6 pt-5 border-t border-slate-700 text-center">
+            <p className="text-xs text-slate-400 mb-2">📌 Xem Phân công nhiệm vụ & Mã nguồn dự án:</p>
+            <a 
+              href="https://github.com/nguyenthihuyentram/travel-planner"
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-blue-400 text-xs font-bold rounded-lg border border-slate-600 transition"
+            >
+              📂 GitHub Repo ↗
+            </a>
+          </div>
+
         </div>
       </div>
     );
   }
 
-  // ================= MAIN APP VIEW =================
+  // ================= MAIN APP VIEW (ĐÃ XÓA GITHUB KHỎI HEADER) =================
   const daysLeft = selectedTrip ? getDaysLeft(selectedTrip.startDate) : null;
 
   return (
@@ -298,17 +297,7 @@ export default function TravelPlanner() {
           <span className="text-4xl">✈️</span>
           <span className="text-2xl font-black text-blue-400 tracking-wider">TravelPlanner Pro</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-300">
-          <span>📌 Phân công & Source Code:</span>
-          <a 
-          href="https://github.com/nguyenthihuyentram/travel-planner"
-            target="_blank" 
-              rel="noopener noreferrer"
-          className="px-2.5 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition"
-          >
-          GitHub Repo ↗
-          </a>
-        </div>
+        
         <div className="flex items-center space-x-6">
           <div className="text-right hidden sm:block">
             <p className="text-base font-bold text-slate-200">{user.name}</p>
@@ -320,7 +309,7 @@ export default function TravelPlanner() {
         </div>
       </nav>
 
-      {/* CONTAINER MỞ RỘNG KHÔNG GIAN FULL WIDTH */}
+      {/* CONTAINER MỞ RỘNG FULL WIDTH */}
       <div className="max-w-[1600px] mx-auto p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
 
         {/* SIDEBAR TRÁI (4 COLS) */}
@@ -423,22 +412,22 @@ export default function TravelPlanner() {
                 </div>
               </div>
 
-              {/* TAB NAVIGATION */}
-              <div className="flex border-b border-slate-200 bg-white rounded-t-2xl px-3 pt-3 gap-3 overflow-x-auto">
-                <button onClick={() => setActiveTab('itinerary')} className={`py-3 px-6 font-extrabold text-base rounded-t-xl transition flex items-center gap-2 ${activeTab === 'itinerary' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+              {/* TAB NAVIGATION (ĐẦY ĐỦ 5 TÍNH NĂNG) */}
+              <div className="flex border-b border-slate-200 bg-white rounded-t-2xl px-3 pt-3 gap-2 overflow-x-auto">
+                <button onClick={() => setActiveTab('itinerary')} className={`py-3 px-5 font-extrabold text-sm rounded-t-xl transition flex items-center gap-2 whitespace-nowrap ${activeTab === 'itinerary' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
                   📍 Lịch Trình
                 </button>
-                <button onClick={() => setActiveTab('passengers')} className={`py-3 px-6 font-extrabold text-base rounded-t-xl transition flex items-center gap-2 ${activeTab === 'passengers' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-                  👤 Người Đặt Vé & Hành Khách ({selectedTrip.passengers?.length || 0})
+                <button onClick={() => setActiveTab('passengers')} className={`py-3 px-5 font-extrabold text-sm rounded-t-xl transition flex items-center gap-2 whitespace-nowrap ${activeTab === 'passengers' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+                  👤 Hành Khách ({selectedTrip.passengers?.length || 0})
                 </button>
-                <button onClick={() => setActiveTab('checklist')} className={`py-3 px-6 font-extrabold text-base rounded-t-xl transition flex items-center gap-2 ${activeTab === 'checklist' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-                  ☑️ Hành Lý ({selectedTrip.checklist?.filter(i => i.done).length || 0}/{selectedTrip.checklist?.length || 0})
+                <button onClick={() => setActiveTab('expenses')} className={`py-3 px-5 font-extrabold text-sm rounded-t-xl transition flex items-center gap-2 whitespace-nowrap ${activeTab === 'expenses' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+                  💰 Chi Phí
                 </button>
-                <button onClick={() => setActiveTab('expenses')} className={`py-3 px-6 font-extrabold text-base rounded-t-xl transition flex items-center gap-2 ${activeTab === 'expenses' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-                  💳 Chi Phí
+                <button onClick={() => setActiveTab('checklist')} className={`py-3 px-5 font-extrabold text-sm rounded-t-xl transition flex items-center gap-2 whitespace-nowrap ${activeTab === 'checklist' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+                  🎒 Checklist
                 </button>
-                <button onClick={() => setActiveTab('notes')} className={`py-3 px-6 font-extrabold text-base rounded-t-xl transition flex items-center gap-2 ${activeTab === 'notes' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
-                  📝 Ghi Chú & Vé
+                <button onClick={() => setActiveTab('notes')} className={`py-3 px-5 font-extrabold text-sm rounded-t-xl transition flex items-center gap-2 whitespace-nowrap ${activeTab === 'notes' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>
+                  📝 Ghi Chú
                 </button>
               </div>
 
@@ -475,10 +464,9 @@ export default function TravelPlanner() {
                 </div>
               )}
 
-              {/* TAB 2: THÔNG TIN NGƯỜI ĐẶT VÉ & HÀNH KHÁCH (CẬP NHẬT MỚI) */}
+              {/* TAB 2: THÔNG TIN HÀNH KHÁCH */}
               {activeTab === 'passengers' && (
                 <div className="bg-white p-6 rounded-b-2xl shadow-sm border border-t-0 border-slate-200 space-y-6">
-                  {/* FORM THÊM HÀNH KHÁCH */}
                   <form onSubmit={handleAddPassenger} className="space-y-4 bg-slate-50 p-5 rounded-xl border">
                     <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
                       👤 Thêm Thông Tin Người Đặt Vé / Hành Khách
@@ -498,7 +486,6 @@ export default function TravelPlanner() {
                     <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-base shadow">Lưu Thông Tin Hành Khách</button>
                   </form>
 
-                  {/* DANH SÁCH HÀNH KHÁCH ĐÃ LƯU */}
                   <div className="space-y-4">
                     <h3 className="font-bold text-slate-900 text-base">📋 Danh Sách Người Đặt Vé / Đi Cùng</h3>
                     {(!selectedTrip.passengers || selectedTrip.passengers.length === 0) && (
@@ -536,105 +523,60 @@ export default function TravelPlanner() {
                 </div>
               )}
 
-              {/* TAB 3: CHECKLIST HÀNH LÝ */}
-              {activeTab === 'checklist' && (
-                <div className="bg-white p-6 rounded-b-2xl shadow-sm border border-t-0 border-slate-200 space-y-5">
-                  <form onSubmit={handleAddChecklist} className="flex gap-3">
-                    <input type="text" placeholder="Thêm đồ dùng cần mang (VD: Áo mưa, Giày thể thao...)" className="flex-1 p-3 border rounded-xl text-base text-black outline-none" value={checklistInput} onChange={e => setChecklistInput(e.target.value)} />
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 rounded-xl text-base">Thêm Món</button>
-                  </form>
-
-                  <div className="space-y-3 max-h-[450px] overflow-y-auto">
-                    {selectedTrip.checklist?.map(item => (
-                      <div key={item.id} onClick={() => toggleChecklist(item.id)} className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition ${item.done ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-slate-300'}`}>
-                        <div className="flex items-center gap-3">
-                          <input type="checkbox" checked={item.done} onChange={() => {}} className="w-5 h-5 accent-blue-600 rounded" />
-                          <span className={`text-base font-semibold ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>{item.text}</span>
-                        </div>
-                        <button onClick={(e) => { e.stopPropagation(); updateCurrentTrip({ ...selectedTrip, checklist: selectedTrip.checklist.filter(i => i.id !== item.id) }); }} className="text-slate-400 hover:text-red-500 font-bold text-sm">Xóa</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 4: CHI PHÍ & THANH TOÁN HÓA ĐƠN */}
+              {/* TAB 3: CHI PHÍ & THANH TOÁN QR */}
               {activeTab === 'expenses' && (
                 <div className="bg-white p-6 rounded-b-2xl shadow-sm border border-t-0 border-slate-200 space-y-6">
-                  <div className="bg-slate-900 text-white p-6 rounded-2xl space-y-3">
-                    <div className="flex justify-between text-sm text-slate-300 font-semibold">
-                      <span>Ngân sách dự kiến: {selectedTrip.budget.toLocaleString()} VNĐ</span>
-                      <span>Đã chi: {totalSpent.toLocaleString()} VNĐ</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                      <span className="text-xs text-emerald-600 font-bold uppercase">Tổng chi tiêu</span>
+                      <p className="text-2xl font-black text-emerald-800 mt-1">{totalSpent.toLocaleString()} VNĐ</p>
                     </div>
-                    <div className="w-full bg-slate-700 h-3 rounded-full overflow-hidden">
-                      <div className={`h-full ${totalSpent > selectedTrip.budget ? 'bg-red-500' : 'bg-green-400'}`} style={{ width: `${Math.min((totalSpent / (selectedTrip.budget || 1)) * 100, 100)}%` }}></div>
-                    </div>
-                    <div className="flex justify-between items-center pt-1 text-base font-bold">
-                      <span>Ngân sách còn lại:</span>
-                      <span className={selectedTrip.budget - totalSpent < 0 ? 'text-red-400' : 'text-green-400'}>
-                        {(selectedTrip.budget - totalSpent).toLocaleString()} VNĐ
-                      </span>
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <span className="text-xs text-blue-600 font-bold uppercase">Ngân sách dự kiến</span>
+                      <p className="text-2xl font-black text-blue-800 mt-1">{(selectedTrip.budget || 0).toLocaleString()} VNĐ</p>
                     </div>
                   </div>
 
                   <form onSubmit={handleAddExpense} className="space-y-3 bg-slate-50 p-4 rounded-xl border">
-                    <h3 className="font-bold text-slate-800 text-sm">➕ Tạo Hóa Đơn / Thêm Khoản Chi</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <input type="text" placeholder="Nội dung (VD: Vé máy bay, Ăn tối...)" required className="p-3 border rounded-xl text-base text-black" value={expenseForm.title} onChange={e => setExpenseForm({...expenseForm, title: e.target.value})} />
-                      <input type="number" placeholder="Số tiền (VNĐ)" required className="p-3 border rounded-xl text-base text-black" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} />
+                      <input type="text" placeholder="Tên khoản chi (Tiền khách sạn...)" required className="p-3 border rounded-xl text-sm text-black" value={expenseForm.title} onChange={e => setExpenseForm({...expenseForm, title: e.target.value})} />
+                      <input type="number" placeholder="Số tiền (VNĐ)" required className="p-3 border rounded-xl text-sm text-black" value={expenseForm.amount} onChange={e => setExpenseForm({...expenseForm, amount: e.target.value})} />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <select className="p-3 border rounded-xl text-base text-black" value={expenseForm.method} onChange={e => setExpenseForm({...expenseForm, method: e.target.value})}>
-                        <option value="Tiền mặt">💵 Tiền mặt</option>
-                        <option value="Chuyển khoản (VietQR)">🏦 Chuyển khoản (VietQR)</option>
+                      <select className="p-3 border rounded-xl text-sm text-black" value={expenseForm.method} onChange={e => setExpenseForm({...expenseForm, method: e.target.value})}>
+                        <option value="Tiền mặt">Tiền mặt</option>
+                        <option value="Chuyển khoản (VietQR)">Chuyển khoản VietQR</option>
                       </select>
-
                       {expenseForm.method === 'Chuyển khoản (VietQR)' && (
                         <>
-                          <select className="p-3 border rounded-xl text-base text-black" value={expenseForm.bank} onChange={e => setExpenseForm({...expenseForm, bank: e.target.value})}>
+                          <select className="p-3 border rounded-xl text-sm text-black" value={expenseForm.bank} onChange={e => setExpenseForm({...expenseForm, bank: e.target.value})}>
                             <option value="MBBank">MBBank</option>
                             <option value="Vietcombank">Vietcombank</option>
                             <option value="Techcombank">Techcombank</option>
                             <option value="VPBank">VPBank</option>
-                            <option value="ACB">ACB</option>
                           </select>
-                          <input type="text" placeholder="Số tài khoản nhận" required className="p-3 border rounded-xl text-base text-black" value={expenseForm.accountNo} onChange={e => setExpenseForm({...expenseForm, accountNo: e.target.value})} />
+                          <input type="text" placeholder="Số tài khoản nhận" className="p-3 border rounded-xl text-sm text-black" value={expenseForm.accountNo} onChange={e => setExpenseForm({...expenseForm, accountNo: e.target.value})} />
                         </>
                       )}
                     </div>
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-base shadow">Lưu Hóa Đơn Chi Phí</button>
+                    <button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm">Thêm Khoản Chi</button>
                   </form>
 
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    <h3 className="font-bold text-slate-800 text-sm">📋 Danh Sách Hóa Đơn</h3>
-                    {selectedTrip.expenses.length === 0 && <p className="text-slate-400 text-sm text-center py-6">Chưa có hóa đơn nào.</p>}
+                  <div className="space-y-3 max-h-[350px] overflow-y-auto">
                     {selectedTrip.expenses.map(exp => (
-                      <div key={exp.id} className="p-4 bg-slate-50 border rounded-xl flex flex-wrap justify-between items-center gap-3">
+                      <div key={exp.id} className="p-4 bg-slate-50 border rounded-xl flex justify-between items-center">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${exp.paid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                              {exp.paid ? '🟢 Đã thanh toán' : '⏳ Chờ thanh toán'}
-                            </span>
-                            <span className="text-xs text-slate-400">📅 {exp.date}</span>
-                          </div>
-                          <p className="font-bold text-base text-slate-900 mt-1">{exp.title}</p>
-                          <p className="text-xs text-slate-500">PTTT: {exp.method} {exp.bank ? `(${exp.bank} - ${exp.accountNo})` : ''}</p>
+                          <strong className="text-slate-900 text-base">{exp.title}</strong>
+                          <p className="text-xs text-slate-500 mt-0.5">Hình thức: {exp.method}</p>
                         </div>
-
                         <div className="flex items-center gap-3">
-                          <span className="font-extrabold text-slate-900 text-lg">{exp.amount.toLocaleString()} VNĐ</span>
-                          
+                          <span className="font-extrabold text-emerald-700 text-base">{exp.amount.toLocaleString()} VNĐ</span>
                           {exp.method === 'Chuyển khoản (VietQR)' && exp.accountNo && (
-                            <button onClick={() => setActiveBill(exp)} className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
-                              📲 QR Trả Tiền
+                            <button onClick={() => setActiveBill(exp)} className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-blue-200">
+                              📲 QR Quét
                             </button>
                           )}
-
-                          <button onClick={() => toggleExpenseStatus(exp.id)} className={`text-xs font-bold px-3 py-2 rounded-lg transition ${exp.paid ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                            {exp.paid ? 'Đổi trạng thái' : 'Đánh dấu xong'}
-                          </button>
-
-                          <button onClick={() => updateCurrentTrip({ ...selectedTrip, expenses: selectedTrip.expenses.filter(e => e.id !== exp.id) })} className="text-slate-400 hover:text-red-500 font-bold text-base p-1">✕</button>
+                          <button onClick={() => updateCurrentTrip({ ...selectedTrip, expenses: selectedTrip.expenses.filter(e => e.id !== exp.id) })} className="text-slate-400 hover:text-red-500 font-bold">✕</button>
                         </div>
                       </div>
                     ))}
@@ -642,20 +584,42 @@ export default function TravelPlanner() {
                 </div>
               )}
 
-              {/* TAB 5: GHI CHÚ VÀ LƯU VÉ */}
+              {/* TAB 4: CHECKLIST CHUẨN BỊ */}
+              {activeTab === 'checklist' && (
+                <div className="bg-white p-6 rounded-b-2xl shadow-sm border border-t-0 border-slate-200 space-y-6">
+                  <form onSubmit={handleAddChecklist} className="flex gap-2">
+                    <input type="text" placeholder="Thêm đồ dùng cần mang (VD: Thuốc cảm...)" className="p-3 border rounded-xl text-sm text-black flex-1" value={checklistInput} onChange={e => setChecklistInput(e.target.value)} />
+                    <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 rounded-xl text-sm">Thêm</button>
+                  </form>
+
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {selectedTrip.checklist.map(item => (
+                      <div key={item.id} onClick={() => toggleChecklist(item.id)} className={`p-4 rounded-xl border flex items-center justify-between cursor-pointer transition ${item.done ? 'bg-slate-100 line-through text-slate-400 border-slate-200' : 'bg-white border-slate-200 hover:border-blue-400'}`}>
+                        <div className="flex items-center gap-3">
+                          <input type="checkbox" checked={item.done} readOnly className="w-5 h-5 accent-blue-600 rounded" />
+                          <span className="font-semibold text-base">{item.text}</span>
+                        </div>
+                        <button onClick={(e) => { e.stopPropagation(); updateCurrentTrip({ ...selectedTrip, checklist: selectedTrip.checklist.filter(c => c.id !== item.id) }); }} className="text-slate-400 hover:text-red-500 font-bold">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: GHI CHÚ */}
               {activeTab === 'notes' && (
-                <div className="bg-white p-6 rounded-b-2xl shadow-sm border border-t-0 border-slate-200 space-y-5">
+                <div className="bg-white p-6 rounded-b-2xl shadow-sm border border-t-0 border-slate-200 space-y-6">
                   <form onSubmit={handleAddNote} className="space-y-3 bg-slate-50 p-4 rounded-xl border">
-                    <input type="text" placeholder="Tiêu đề (Mã đặt chỗ máy bay, Mã phòng...)" required className="w-full p-3 border rounded-xl text-base text-black" value={noteForm.title} onChange={e => setNoteForm({...noteForm, title: e.target.value})} />
-                    <textarea placeholder="Nội dung chi tiết..." rows="3" className="w-full p-3 border rounded-xl text-base text-black" value={noteForm.content} onChange={e => setNoteForm({...noteForm, content: e.target.value})}></textarea>
-                    <button className="bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-6 rounded-xl text-base">Lưu Ghi Chú</button>
+                    <input type="text" placeholder="Tiêu đề ghi chú (Mã đặt chỗ khách sạn...)" required className="w-full p-3 border rounded-xl text-sm text-black" value={noteForm.title} onChange={e => setNoteForm({...noteForm, title: e.target.value})} />
+                    <textarea placeholder="Nội dung ghi chú chi tiết..." className="w-full p-3 border rounded-xl text-sm text-black h-24" value={noteForm.content} onChange={e => setNoteForm({...noteForm, content: e.target.value})}></textarea>
+                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm">Lưu Ghi Chú</button>
                   </form>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto">
-                    {selectedTrip.notes?.map(note => (
+                    {selectedTrip.notes.map(note => (
                       <div key={note.id} className="p-4 bg-amber-50 border border-amber-200 rounded-xl relative">
-                        <button onClick={() => updateCurrentTrip({ ...selectedTrip, notes: selectedTrip.notes.filter(n => n.id !== note.id) })} className="absolute top-3 right-3 text-slate-400 hover:text-red-500 font-bold text-sm">✕</button>
-                        <h4 className="font-bold text-base text-amber-900">{note.title}</h4>
+                        <button onClick={() => updateCurrentTrip({ ...selectedTrip, notes: selectedTrip.notes.filter(n => n.id !== note.id) })} className="absolute top-3 right-3 text-slate-400 hover:text-red-500 font-bold">✕</button>
+                        <h4 className="font-bold text-amber-900 text-base">{note.title}</h4>
                         <p className="text-sm text-amber-800 mt-2 whitespace-pre-wrap">{note.content}</p>
                       </div>
                     ))}
@@ -664,44 +628,29 @@ export default function TravelPlanner() {
               )}
             </>
           ) : (
-            <div className="bg-white p-16 rounded-2xl border text-center text-slate-400 text-lg">
-              Vui lòng chọn hoặc tạo chuyến đi để xem đầy đủ các tính năng.
+            <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-200 text-center">
+              <p className="text-slate-500 text-lg">Vui lòng chọn hoặc tạo một chuyến đi mới từ danh sách bên trái.</p>
             </div>
           )}
         </div>
 
       </div>
 
-      {/* POPUP MODAL XEM MÃ QR THANH TOÁN VIETQR */}
+      {/* MODAL MÃ QR THANH TOÁN */}
       {activeBill && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white p-6 rounded-2xl max-w-sm w-full text-center space-y-4 shadow-2xl relative">
-            <button onClick={() => setActiveBill(null)} className="absolute top-3 right-4 text-slate-400 hover:text-red-500 text-xl font-bold">✕</button>
-            <h3 className="font-black text-xl text-slate-900">Quét Mã Chuyển Khoản</h3>
-            <p className="text-xs text-slate-500">Mã QR tạo tự động theo ngân hàng và số tiền</p>
-            
-            <div className="bg-slate-50 p-4 rounded-xl border flex justify-center">
-              <img 
-                src={`https://img.vietqr.io/image/${activeBill.bank}-${activeBill.accountNo}-compact2.png?amount=${activeBill.amount}&addInfo=${encodeURIComponent(activeBill.title)}`} 
-                alt="Mã VietQR Thanh Toán" 
-                className="w-64 h-64 object-contain rounded-lg shadow-sm"
-              />
+            <button onClick={() => setActiveBill(null)} className="absolute top-3 right-3 text-slate-400 hover:text-slate-700 font-bold text-lg">✕</button>
+            <h3 className="font-extrabold text-slate-900 text-lg">Mã Quét VietQR Thanh Toán</h3>
+            <p className="text-xs text-slate-500">{activeBill.title}</p>
+            <div className="p-3 bg-slate-100 rounded-xl inline-block border">
+              <img src={`https://img.vietqr.io/image/${activeBill.bank}-${activeBill.accountNo}-compact2.png?amount=${activeBill.amount}&addInfo=${encodeURIComponent(activeBill.title)}`} alt="VietQR" className="w-56 h-56 object-contain mx-auto" />
             </div>
-
-            <div className="text-left bg-slate-100 p-3 rounded-xl text-xs space-y-1 text-slate-700 font-semibold">
-              <p>📍 Khoản chi: <strong>{activeBill.title}</strong></p>
-              <p>💵 Số tiền: <strong className="text-blue-600">{activeBill.amount.toLocaleString()} VNĐ</strong></p>
-              <p>🏦 Ngân hàng: <strong>{activeBill.bank}</strong></p>
-              <p>💳 STK: <strong>{activeBill.accountNo}</strong></p>
-            </div>
-
-            <button onClick={() => { toggleExpenseStatus(activeBill.id); setActiveBill(null); }} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition">
-              Xác Nhận Đã Thanh Toán
-            </button>
+            <p className="text-sm font-bold text-blue-900">Số tiền: {activeBill.amount.toLocaleString()} VNĐ</p>
+            <button onClick={() => setActiveBill(null)} className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-sm">Đóng</button>
           </div>
         </div>
       )}
-
     </div>
   );
 }
