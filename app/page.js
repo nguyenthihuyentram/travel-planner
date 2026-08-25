@@ -298,6 +298,17 @@ export default function TravelPlanner() {
           <span className="text-4xl">✈️</span>
           <span className="text-2xl font-black text-blue-400 tracking-wider">TravelPlanner Pro</span>
         </div>
+        <div className="flex items-center gap-2 text-sm text-gray-300">
+          <span>📌 Phân công & Source Code:</span>
+          <a 
+          href="https://github.com/nguyenthihuyentram/travel-planner-gc8f" 
+            target="_blank" 
+              rel="noopener noreferrer"
+          className="px-2.5 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition"
+          >
+          GitHub Repo ↗
+          </a>
+        </div>
         <div className="flex items-center space-x-6">
           <div className="text-right hidden sm:block">
             <p className="text-base font-bold text-slate-200">{user.name}</p>
