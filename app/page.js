@@ -7,6 +7,11 @@ export default function TravelPlanner() {
   const [isLoginView, setIsLoginView] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
   
+  // State điều khiển ẩn/hiện mật khẩu
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // Forms Auth
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
@@ -21,9 +26,8 @@ export default function TravelPlanner() {
   const [locationForm, setLocationForm] = useState({ name: '', day: 'Ngày 1', note: '' });
   const [expenseForm, setExpenseForm] = useState({ title: '', amount: '' });
 
-  // 1. Tải dữ liệu ban đầu (Ghi nhớ tài khoản & Lịch trình)
+  // Tải dữ liệu ban đầu
   useEffect(() => {
-    // Kiểm tra tài khoản đã ghi nhớ
     const savedSession = localStorage.getItem('app_user_session');
     const rememberedEmail = localStorage.getItem('remembered_email');
     
@@ -36,7 +40,6 @@ export default function TravelPlanner() {
       setUser(JSON.parse(savedSession));
     }
 
-    // Kiểm tra lịch trình
     const savedTrips = localStorage.getItem('my_travel_trips');
     if (savedTrips) {
       const parsed = JSON.parse(savedTrips);
@@ -45,12 +48,12 @@ export default function TravelPlanner() {
     }
   }, []);
 
-  // Đồng bộ lịch trình vào LocalStorage
+  // Đồng bộ lịch trình
   useEffect(() => {
     localStorage.setItem('my_travel_trips', JSON.stringify(trips));
   }, [trips]);
 
-  // --- XỬ LÝ ĐĂNG KÝ ---
+  // Xử lý Đăng ký
   const handleRegister = (e) => {
     e.preventDefault();
     if (!registerForm.name || !registerForm.email || !registerForm.password) {
@@ -60,15 +63,11 @@ export default function TravelPlanner() {
       return alert('Mật khẩu xác nhận không trùng khớp!');
     }
 
-    // Lấy danh sách user đã đăng ký
     const registeredUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    const isExist = registeredUsers.some(u => u.email === registerForm.email);
-
-    if (isExist) {
+    if (registeredUsers.some(u => u.email === registerForm.email)) {
       return alert('Email này đã được đăng ký!');
     }
 
-    // Lưu tài khoản mới
     const newUser = { name: registerForm.name, email: registerForm.email, password: registerForm.password };
     registeredUsers.push(newUser);
     localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
@@ -79,12 +78,10 @@ export default function TravelPlanner() {
     setRegisterForm({ name: '', email: '', password: '', confirmPassword: '' });
   };
 
-  // --- XỬ LÝ ĐĂNG NHẬP ---
+  // Xử lý Đăng nhập
   const handleLogin = (e) => {
     e.preventDefault();
     const registeredUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    
-    // Tìm user trùng khớp
     const foundUser = registeredUsers.find(
       u => u.email === loginForm.email && u.password === loginForm.password
     );
@@ -93,26 +90,22 @@ export default function TravelPlanner() {
       return alert('Email hoặc mật khẩu không chính xác!');
     }
 
-    // Xử lý Ghi nhớ tài khoản
     if (rememberMe) {
       localStorage.setItem('remembered_email', loginForm.email);
     } else {
       localStorage.removeItem('remembered_email');
     }
 
-    // Lưu phiên đăng nhập
     const userData = { name: foundUser.name, email: foundUser.email };
     setUser(userData);
     localStorage.setItem('app_user_session', JSON.stringify(userData));
   };
 
-  // --- XỬ LÝ ĐĂNG XUẤT ---
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('app_user_session');
   };
 
-  // --- LOGIC QUẢN LÝ LỊCH TRÌNH ---
   const handleAddTrip = (e) => {
     e.preventDefault();
     if (!tripForm.title || !tripForm.destination) return;
@@ -172,7 +165,6 @@ export default function TravelPlanner() {
   const totalSpent = selectedTrip ? selectedTrip.expenses.reduce((sum, item) => sum + item.amount, 0) : 0;
   const filteredTrips = trips.filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  // ================= BÀN GIAO GIAO DIỆN CHƯA ĐĂNG NHẬP (AUTH FORM) =================
   if (!user) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex flex-col justify-center items-center p-4">
@@ -184,7 +176,6 @@ export default function TravelPlanner() {
             </p>
           </div>
 
-          {/* FORM ĐĂNG NHẬP */}
           {isLoginView ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
@@ -195,16 +186,25 @@ export default function TravelPlanner() {
                   value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})}
                 />
               </div>
+
               <div>
                 <label className="text-xs text-slate-300 font-semibold uppercase">Mật Khẩu</label>
-                <input
-                  type="password" required placeholder="••••••••"
-                  className="w-full mt-1 p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:border-blue-500 text-white"
-                  value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-                />
+                <div className="relative mt-1">
+                  <input
+                    type={showLoginPassword ? "text" : "password"} required placeholder="••••••••"
+                    className="w-full p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:border-blue-500 text-white pr-10"
+                    value={loginForm.password} onChange={e => setLoginForm({...loginForm, password: e.target.value})}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-base select-none"
+                  >
+                    {showLoginPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
 
-              {/* TÍNH NĂNG GHI NHỚ TÀI KHOẢN */}
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 cursor-pointer text-slate-300">
                   <input
@@ -222,7 +222,6 @@ export default function TravelPlanner() {
               </button>
             </form>
           ) : (
-            /* FORM ĐĂNG KÝ */
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
                 <label className="text-xs text-slate-300 font-semibold uppercase">Họ và Tên</label>
@@ -240,21 +239,41 @@ export default function TravelPlanner() {
                   value={registerForm.email} onChange={e => setRegisterForm({...registerForm, email: e.target.value})}
                 />
               </div>
+
               <div>
                 <label className="text-xs text-slate-300 font-semibold uppercase">Mật Khẩu</label>
-                <input
-                  type="password" required placeholder="••••••••"
-                  className="w-full mt-1 p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:border-blue-500 text-white"
-                  value={registerForm.password} onChange={e => setRegisterForm({...registerForm, password: e.target.value})}
-                />
+                <div className="relative mt-1">
+                  <input
+                    type={showRegPassword ? "text" : "password"} required placeholder="••••••••"
+                    className="w-full p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:border-blue-500 text-white pr-10"
+                    value={registerForm.password} onChange={e => setRegisterForm({...registerForm, password: e.target.value})}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-base select-none"
+                  >
+                    {showRegPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
+
               <div>
                 <label className="text-xs text-slate-300 font-semibold uppercase">Xác Nhận Mật Khẩu</label>
-                <input
-                  type="password" required placeholder="••••••••"
-                  className="w-full mt-1 p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:border-blue-500 text-white"
-                  value={registerForm.confirmPassword} onChange={e => setRegisterForm({...registerForm, confirmPassword: e.target.value})}
-                />
+                <div className="relative mt-1">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"} required placeholder="••••••••"
+                    className="w-full p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:border-blue-500 text-white pr-10"
+                    value={registerForm.confirmPassword} onChange={e => setRegisterForm({...registerForm, confirmPassword: e.target.value})}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-base select-none"
+                  >
+                    {showConfirmPassword ? '🙈' : '👁️'}
+                  </button>
+                </div>
               </div>
 
               <button className="w-full py-3 bg-green-600 hover:bg-green-500 font-bold rounded-lg transition shadow-lg mt-2">
@@ -263,7 +282,6 @@ export default function TravelPlanner() {
             </form>
           )}
 
-          {/* CHUYỂN ĐỔI FORM */}
           <div className="mt-6 text-center text-sm text-slate-400">
             {isLoginView ? "Chưa có tài khoản? " : "Đã có tài khoản? "}
             <button
@@ -278,10 +296,8 @@ export default function TravelPlanner() {
     );
   }
 
-  // ================= GIAO DIỆN CHÍNH (ĐÃ ĐĂNG NHẬP) =================
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      {/* NAVBAR */}
       <nav className="bg-slate-900 text-white px-6 py-4 shadow-md flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <span className="text-2xl">✈️</span>
@@ -301,28 +317,23 @@ export default function TravelPlanner() {
         </div>
       </nav>
 
-      {/* BODY CONTENT */}
       <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* CỘT 1: CHUYẾN ĐI & TÌM KIẾM */}
         <div className="space-y-6">
           <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900">
-              ➕ Tạo Lịch Trình Mới
-            </h2>
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900">➕ Tạo Lịch Trình Mới</h2>
             <form onSubmit={handleAddTrip} className="space-y-3">
               <input
-                type="text" placeholder="Tên chuyến đi (VD: Đi Đà Lạt 3N2Đ)"
+                type="text" placeholder="Tên chuyến đi"
                 className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
                 value={tripForm.title} onChange={e => setTripForm({...tripForm, title: e.target.value})}
               />
               <input
-                type="text" placeholder="Điểm đến (VD: Đà Lạt)"
+                type="text" placeholder="Điểm đến"
                 className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
                 value={tripForm.destination} onChange={e => setTripForm({...tripForm, destination: e.target.value})}
               />
               <input
-                type="number" placeholder="Ngân sách dự kiến (VNĐ)"
+                type="number" placeholder="Ngân sách (VNĐ)"
                 className="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black"
                 value={tripForm.budget} onChange={e => setTripForm({...tripForm, budget: e.target.value})}
               />
@@ -336,14 +347,13 @@ export default function TravelPlanner() {
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-lg font-bold text-slate-900">Danh Sách ({trips.length})</h2>
               <input
-                type="text" placeholder="🔍 Tìm chuyến đi..."
+                type="text" placeholder="🔍 Tìm kiếm..."
                 className="p-1.5 border rounded-lg text-xs w-36 outline-none text-black"
                 value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
             
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredTrips.length === 0 && <p className="text-sm text-slate-400">Không tìm thấy chuyến đi nào.</p>}
               {filteredTrips.map(trip => (
                 <div
                   key={trip.id}
@@ -366,16 +376,13 @@ export default function TravelPlanner() {
           </div>
         </div>
 
-        {/* CỘT 2: ĐỊA ĐIỂM CHI TIẾT */}
         <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900">
-            📍 Địa Điểm Tham Quan
-          </h2>
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900">📍 Địa Điểm Tham Quan</h2>
           {selectedTrip ? (
             <>
               <form onSubmit={handleAddLocation} className="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
                 <input
-                  type="text" placeholder="Tên địa điểm (VD: Hồ Tuyền Lâm)"
+                  type="text" placeholder="Tên địa điểm"
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-black"
                   value={locationForm.name} onChange={e => setLocationForm({...locationForm, name: e.target.value})}
                 />
@@ -389,7 +396,7 @@ export default function TravelPlanner() {
                   <option value="Ngày 4">Ngày 4</option>
                 </select>
                 <input
-                  type="text" placeholder="Ghi chú (mở cửa 8h, vé 50k...)"
+                  type="text" placeholder="Ghi chú"
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-black"
                   value={locationForm.note} onChange={e => setLocationForm({...locationForm, note: e.target.value})}
                 />
@@ -414,18 +421,14 @@ export default function TravelPlanner() {
               </div>
             </>
           ) : (
-            <div className="text-center py-12 text-slate-400">Vui lòng chọn hoặc tạo chuyến đi để thêm địa điểm.</div>
+            <div className="text-center py-12 text-slate-400">Vui lòng chọn hoặc tạo chuyến đi.</div>
           )}
         </div>
 
-        {/* CỘT 3: THỐNG KÊ CHI PHÍ */}
         <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900">
-            💵 Quản Lý Chi Phí
-          </h2>
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-slate-900">💵 Quản Lý Chi Phí</h2>
           {selectedTrip ? (
             <>
-              {/* Thống kê ngân sách */}
               <div className="bg-slate-900 text-white p-4 rounded-xl mb-4 space-y-2">
                 <div className="flex justify-between text-xs text-slate-400">
                   <span>Dự kiến: {selectedTrip.budget.toLocaleString()} VNĐ</span>
@@ -447,7 +450,7 @@ export default function TravelPlanner() {
 
               <form onSubmit={handleAddExpense} className="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg">
                 <input
-                  type="text" placeholder="Khoản chi (VD: Khách sạn, Vé tham quan)"
+                  type="text" placeholder="Khoản chi"
                   className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none text-black"
                   value={expenseForm.title} onChange={e => setExpenseForm({...expenseForm, title: e.target.value})}
                 />
@@ -476,10 +479,9 @@ export default function TravelPlanner() {
               </div>
             </>
           ) : (
-            <div className="text-center py-12 text-slate-400">Vui lòng chọn hoặc tạo chuyến đi để quản lý chi phí.</div>
+            <div className="text-center py-12 text-slate-400">Vui lòng chọn hoặc tạo chuyến đi.</div>
           )}
         </div>
-
       </div>
     </div>
   );
