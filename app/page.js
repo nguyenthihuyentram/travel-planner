@@ -301,7 +301,7 @@ export default function TravelPlanner() {
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <span>📌 Phân công & Source Code:</span>
           <a 
-          href="https://github.com/nguyenthihuyentram/travel-planner-gc8f" 
+          href="href="https://github.com/nguyenthihuyentram/travel-planner-gc8f"" 
             target="_blank" 
               rel="noopener noreferrer"
           className="px-2.5 py-1 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition"
