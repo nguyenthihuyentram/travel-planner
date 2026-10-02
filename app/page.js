@@ -71,6 +71,36 @@ export default function TravelPlanner() {
   const [currency, setCurrency] = useState('USD');
   const exchangeRates = { USD: 25400, EUR: 27500, JPY: 165, KRW: 18 };
 
+ // State cho Góc chia sẻ
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [posts, setPosts] = useState([
+    {
+      id: 1,
+      author: 'Trần Minh Thư',
+      avatar: 'T',
+      time: 'Đã đăng 2 giờ trước',
+      location: 'Đà Lạt',
+      content: 'Chuyến đi 3N2Đ săn mây Cầu Đất cực kỳ mãn nhãn. Thời tiết Đà Lạt tuần này se lạnh về đêm, ban ngày nắng vàng rất đẹp. Mọi người nhớ ghé tiệm cà phê Túi Mơ To sống ảo nhé, view đỉnh lắm ạ! ❤️',
+      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80',
+      likes: 128,
+      comments: 24,
+    },
+    {
+      id: 2,
+      author: 'Hoàng Nam',
+      avatar: 'H',
+      time: 'Đã đăng 1 ngày trước',
+      location: 'Vịnh Hạ Long',
+      content: 'Lần đầu đi du thuyền khám phá Vịnh Hạ Long và thực sự không thất vọng chút nào. Cảnh quan kỳ vĩ, dịch vụ chuyên nghiệp. Khuyên mọi người nên chọn tour ngắm hoàng hôn trên vịnh nhé! 🌅',
+      image: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80',
+      likes: 256,
+      comments: 42,
+    }
+  ]);
+  const [newContent, setNewContent] = useState('');
+  const [newLocation, setNewLocation] = useState('');
+  const [newImage, setNewImage] = useState('');
+ 
   // Các hàm lọc dữ liệu
   const filteredDestinations = destinationList.filter((item) => {
     const matchSearch = item.name.toLowerCase().includes(destSearch.toLowerCase()) || 
@@ -1150,7 +1180,7 @@ export default function TravelPlanner() {
 
         {/* TAB GÓC CHIA SẺ */}
         {activeTab === 'community' && (
-          <div className="space-y-6">
+          <div className="space-y-6 relative">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-extrabold">Góc Chia Sẻ & Review Du Lịch</h1>
@@ -1159,92 +1189,158 @@ export default function TravelPlanner() {
                 </p>
               </div>
               <button 
-                onClick={() => alert('Tính năng đăng bài viết mới đang được mở rộng!')}
+                onClick={() => setShowPostModal(true)}
                 className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 shrink-0"
               >
                 <span>✏️ Viết bài review</span>
               </button>
             </div>
 
+            {/* DANH SÁCH BÀI VIẾT */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Bài viết mẫu 1 */}
-              <div className={`p-5 rounded-2xl border space-y-4 shadow-sm transition hover:shadow-md ${
-                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
-              }`}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow">
-                    T
+              {posts.map((post) => (
+                <div key={post.id} className={`p-5 rounded-2xl border space-y-4 shadow-sm transition hover:shadow-md ${
+                  isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow">
+                      {post.avatar}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm">{post.author}</h4>
+                      <p className="text-[11px] text-slate-400">{post.time} • 📍 {post.location}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-sm">Trần Minh Thư</h4>
-                    <p className="text-[11px] text-slate-400">Đã đăng 2 giờ trước • 📍 Đà Lạt</p>
-                  </div>
-                </div>
 
-                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Chuyến đi 3N2Đ săn mây Cầu Đất cực kỳ mãn nhãn. Thời tiết Đà Lạt tuần này se lạnh về đêm, ban ngày nắng vàng rất đẹp. Mọi người nhớ ghé tiệm cà phê Túi Mơ To sống ảo nhé, view đỉnh lắm ạ! ❤️
-                </p>
+                  <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {post.content}
+                  </p>
 
-                <div className="rounded-xl overflow-hidden h-48">
-                  <img 
-                    src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" 
-                    alt="Review Đà Lạt" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                  {post.image && (
+                    <div className="rounded-xl overflow-hidden h-48">
+                      <img 
+                        src={post.image} 
+                        alt="Review" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
 
-                <div className="flex items-center justify-between pt-2 border-t dark:border-slate-700 text-xs text-slate-500">
-                  <button className="flex items-center gap-1.5 hover:text-red-500 transition font-medium">
-                    <span>❤️ 128 Thích</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
-                    <span>💬 24 Bình luận</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
-                    <span>🔗 Chia sẻ</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Bài viết mẫu 2 */}
-              <div className={`p-5 rounded-2xl border space-y-4 shadow-sm transition hover:shadow-md ${
-                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
-              }`}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow">
-                    H
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm">Hoàng Nam</h4>
-                    <p className="text-[11px] text-slate-400">Đã đăng 1 ngày trước • 📍 Vịnh Hạ Long</p>
+                  <div className="flex items-center justify-between pt-2 border-t dark:border-slate-700 text-xs text-slate-500">
+                    <button 
+                      onClick={() => {
+                        setPosts(posts.map(p => p.id === post.id ? {...p, likes: p.likes + 1} : p));
+                      }}
+                      className="flex items-center gap-1.5 hover:text-red-500 transition font-medium"
+                    >
+                      <span>❤️ {post.likes} Thích</span>
+                    </button>
+                    <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
+                      <span>💬 {post.comments} Bình luận</span>
+                    </button>
+                    <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
+                      <span>🔗 Chia sẻ</span>
+                    </button>
                   </div>
                 </div>
-
-                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Lần đầu đi du thuyền khám phá Vịnh Hạ Long và thực sự không thất vọng chút nào. Cảnh quan kỳ vĩ, dịch vụ chuyên nghiệp. Khuyên mọi người nên chọn tour ngắm hoàng hôn trên vịnh nhé! 🌅
-                </p>
-
-                <div className="rounded-xl overflow-hidden h-48">
-                  <img 
-                    src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80" 
-                    alt="Review Hạ Long" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t dark:border-slate-700 text-xs text-slate-500">
-                  <button className="flex items-center gap-1.5 hover:text-red-500 transition font-medium">
-                    <span>❤️ 256 Thích</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
-                    <span>💬 42 Bình luận</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
-                    <span>🔗 Chia sẻ</span>
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
+
+            {/* MODAL ĐĂNG BÀI REVIEW */}
+            {showPostModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div className={`w-full max-w-lg p-6 rounded-2xl border shadow-xl space-y-4 ${
+                  isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-800'
+                }`}>
+                  <div className="flex items-center justify-between border-b pb-3 dark:border-slate-800">
+                    <h3 className="text-lg font-bold">Viết Bài Review Du Lịch</h3>
+                    <button 
+                      onClick={() => setShowPostModal(false)}
+                      className="text-slate-400 hover:text-red-500 font-bold text-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-semibold block mb-1">Địa điểm / Tỉnh thành</label>
+                      <input 
+                        type="text" 
+                        placeholder="VD: Đà Nẵng, Phú Quốc..."
+                        value={newLocation}
+                        onChange={(e) => setNewLocation(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold block mb-1">Nội dung review</label>
+                      <textarea 
+                        rows="4"
+                        placeholder="Chia sẻ cảm nhận, lịch trình hoặc quán ăn ngon..."
+                        value={newContent}
+                        onChange={(e) => setNewContent(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      ></textarea>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold block mb-1">Link hình ảnh minh họa (URL)</label>
+                      <input 
+                        type="text" 
+                        placeholder="Dán link ảnh (https://...)"
+                        value={newImage}
+                        onChange={(e) => setNewImage(e.target.value)}
+                        className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t dark:border-slate-800">
+                    <button 
+                      onClick={() => setShowPostModal(false)}
+                      className="px-4 py-2 rounded-xl border text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    >
+                      Hủy
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (!newContent.trim()) {
+                          alert('Vui lòng nhập nội dung bài viết!');
+                          return;
+                        }
+                        const newPostItem = {
+                          id: Date.now(),
+                          author: 'Nguyễn Thị Huyền Trâm',
+                          avatar: 'N',
+                          time: 'Vừa xong',
+                          location: newLocation || 'Việt Nam',
+                          content: newContent,
+                          image: newImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80',
+                          likes: 0,
+                          comments: 0,
+                        };
+                        setPosts([newPostItem, ...posts]);
+                        setNewContent('');
+                        setNewLocation('');
+                        setNewImage('');
+                        setShowPostModal(false);
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow transition"
+                    >
+                      Đăng bài
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
