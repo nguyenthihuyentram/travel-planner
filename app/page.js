@@ -101,6 +101,18 @@ export default function TravelPlanner() {
   const [newLocation, setNewLocation] = useState('');
   const [newImage, setNewImage] = useState('');
  
+  // State quản lý thông tin Hồ sơ cá nhân
+  const [userProfile, setUserProfile] = useState({
+    name: 'Nguyễn Thị Huyền Trâm',
+    email: 'tram592005@gmail.com',
+    phone: '0987 654 321',
+    bio: 'Đam mê dịch chuyển, thích khám phá văn hóa và ẩm thực mọi miền Tổ quốc! ✈️',
+    role: 'Thành viên Vàng (Gold Member)',
+  });
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [tempName, setTempName] = useState(userProfile.name);
+  const [tempBio, setTempBio] = useState(userProfile.bio);
+  
   // Các hàm lọc dữ liệu
   const filteredDestinations = destinationList.filter((item) => {
     const matchSearch = item.name.toLowerCase().includes(destSearch.toLowerCase()) || 
@@ -1138,13 +1150,125 @@ export default function TravelPlanner() {
 
         {/* TAB HỒ SƠ TÀI KHOẢN */}
         {activeTab === 'profile' && (
-          <div className={`max-w-md mx-auto p-6 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} text-center space-y-4 shadow-sm`}>
-            <div className="w-20 h-20 bg-blue-600 text-white font-bold rounded-full flex items-center justify-center mx-auto text-3xl shadow-md">
-              N
-            </div>
+          <div className="max-w-3xl mx-auto space-y-6">
             <div>
-              <h2 className="text-xl font-bold">Nguyễn Thị Huyền Trâm</h2>
-              <p className="text-slate-500 text-sm">tram592005@gmail.com</p>
+              <h1 className="text-2xl md:text-3xl font-extrabold">Hồ Sơ Tài Khoản</h1>
+              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Quản lý thông tin cá nhân và lịch sử hoạt động của bạn trên TravelPlanner
+              </p>
+            </div>
+
+            {/* THẺ THÔNG TIN CHÍNH */}
+            <div className={`p-6 rounded-2xl border shadow-sm space-y-6 ${
+              isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+            }`}>
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-extrabold text-3xl flex items-center justify-center shadow-lg">
+                  {userProfile.name.charAt(0)}
+                </div>
+                
+                <div className="text-center sm:text-left space-y-1 flex-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h2 className="text-xl font-bold">{userProfile.name}</h2>
+                    <span className="px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[11px] font-bold rounded-full w-fit mx-auto sm:mx-0">
+                      ⭐ {userProfile.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{userProfile.email}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 italic">
+                    "{userProfile.bio}"
+                  </p>
+                </div>
+              </div>
+
+              {/* THỐNG KÊ HOẠT ĐỘNG */}
+              <div className="grid grid-cols-3 gap-4 pt-4 border-t dark:border-slate-700 text-center">
+                <div className={`p-3 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                  <p className="text-lg font-extrabold text-blue-600">3</p>
+                  <p className="text-[11px] text-slate-500">Chuyến đi</p>
+                </div>
+                <div className={`p-3 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                  <p className="text-lg font-extrabold text-emerald-600">2</p>
+                  <p className="text-[11px] text-slate-500">Bài review</p>
+                </div>
+                <div className={`p-3 rounded-xl border ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                  <p className="text-lg font-extrabold text-purple-600">12</p>
+                  <p className="text-[11px] text-slate-500">Đã lưu</p>
+                </div>
+              </div>
+
+              {/* FORM CHỈNH SỬA HOẶC NÚT ĐIỀU KHIỂN */}
+              <div className="pt-2">
+                {!isEditingProfile ? (
+                  <div className="flex flex-wrap gap-3">
+                    <button 
+                      onClick={() => {
+                        setTempName(userProfile.name);
+                        setTempBio(userProfile.bio);
+                        setIsEditingProfile(true);
+                      }}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition"
+                    >
+                      ✏️ Chỉnh sửa hồ sơ
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?')) {
+                          setIsLoggedIn(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-xs font-bold rounded-xl transition"
+                    >
+                      🚪 Đăng xuất tài khoản
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4 pt-4 border-t dark:border-slate-700">
+                    <h3 className="text-sm font-bold">Cập nhật thông tin cá nhân</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-semibold block mb-1">Họ và tên</label>
+                        <input 
+                          type="text" 
+                          value={tempName}
+                          onChange={(e) => setTempName(e.target.value)}
+                          className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold block mb-1">Giới thiệu bản thân (Bio)</label>
+                        <textarea 
+                          rows="2"
+                          value={tempBio}
+                          onChange={(e) => setTempBio(e.target.value)}
+                          className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                          }`}
+                        ></textarea>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => {
+                          setUserProfile({...userProfile, name: tempName, bio: tempBio});
+                          setIsEditingProfile(false);
+                        }}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition"
+                      >
+                        Lưu thay đổi
+                      </button>
+                      <button 
+                        onClick={() => setIsEditingProfile(false)}
+                        className="px-4 py-2 border text-xs font-medium rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
