@@ -1150,7 +1150,7 @@ export default function TravelPlanner() {
 
         {/* TAB HỒ SƠ TÀI KHOẢN */}
         {activeTab === 'profile' && (
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-2xl mx-auto space-y-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold">Hồ Sơ Tài Khoản</h1>
               <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -1158,16 +1158,16 @@ export default function TravelPlanner() {
               </p>
             </div>
 
-            {/* THẺ THÔNG TIN CHÍNH */}
+            {/* THẺ THÔNG TIN CHÍNH & CHỈNH SỬA LIỀN MẠCH */}
             <div className={`p-6 rounded-2xl border shadow-sm space-y-6 ${
               isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
             }`}>
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-extrabold text-3xl flex items-center justify-center shadow-lg">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-extrabold text-3xl flex items-center justify-center shadow-lg shrink-0">
                   {userProfile.name.charAt(0)}
                 </div>
                 
-                <div className="text-center sm:text-left space-y-1 flex-1">
+                <div className="text-center sm:text-left space-y-1.5 flex-1 w-full">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <h2 className="text-xl font-bold">{userProfile.name}</h2>
                     <span className="px-3 py-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[11px] font-bold rounded-full w-fit mx-auto sm:mx-0">
@@ -1175,9 +1175,6 @@ export default function TravelPlanner() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400">{userProfile.email}</p>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 italic">
-                    "{userProfile.bio}"
-                  </p>
                 </div>
               </div>
 
@@ -1197,59 +1194,84 @@ export default function TravelPlanner() {
                 </div>
               </div>
 
-              {/* FORM CHỈNH SỬA HOẶC NÚT ĐIỀU KHIỂN */}
-              <div className="pt-2">
+              {/* KHUNG NỘI DUNG THÔNG TIN & CHỈNH SỬA */}
+              <div className="pt-4 border-t dark:border-slate-700 space-y-4">
                 {!isEditingProfile ? (
-                  <div className="flex flex-wrap gap-3">
-                    <button 
-                      onClick={() => {
-                        setTempName(userProfile.name);
-                        setTempBio(userProfile.bio);
-                        setIsEditingProfile(true);
-                      }}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition"
-                    >
-                      ✏️ Chỉnh sửa hồ sơ
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?')) {
-                          setIsLoggedIn(false);
-                        }
-                      }}
-                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-xs font-bold rounded-xl transition"
-                    >
-                      🚪 Đăng xuất tài khoản
-                    </button>
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Giới thiệu bản thân (Bio)</span>
+                      <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 italic bg-slate-50 dark:bg-slate-900/40 p-3 rounded-xl border dark:border-slate-700/60">
+                        "{userProfile.bio}"
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                      <button 
+                        onClick={() => {
+                          setTempName(userProfile.name);
+                          setTempBio(userProfile.bio);
+                          setIsEditingProfile(true);
+                        }}
+                        className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5"
+                      >
+                        <span>✏️ Chỉnh sửa hồ sơ</span>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?')) {
+                            setIsLoggedIn(false);
+                          }
+                        }}
+                        className="px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                      >
+                        <span>🚪 Đăng xuất tài khoản</span>
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-4 pt-4 border-t dark:border-slate-700">
-                    <h3 className="text-sm font-bold">Cập nhật thông tin cá nhân</h3>
+                  <div className="space-y-4 bg-slate-50/50 dark:bg-slate-900/30 p-4 rounded-xl border dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600">Chỉnh sửa thông tin</h3>
+                      <button 
+                        onClick={() => setIsEditingProfile(false)}
+                        className="text-slate-400 hover:text-red-500 text-xs font-bold"
+                      >
+                        ✕ Đóng
+                      </button>
+                    </div>
+
                     <div className="space-y-3">
                       <div>
-                        <label className="text-xs font-semibold block mb-1">Họ và tên</label>
+                        <label className="text-[11px] font-semibold block mb-1 text-slate-500">Họ và tên</label>
                         <input 
                           type="text" 
                           value={tempName}
                           onChange={(e) => setTempName(e.target.value)}
                           className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                            isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200'
                           }`}
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-semibold block mb-1">Giới thiệu bản thân (Bio)</label>
+                        <label className="text-[11px] font-semibold block mb-1 text-slate-500">Giới thiệu bản thân (Bio)</label>
                         <textarea 
-                          rows="2"
+                          rows="3"
                           value={tempBio}
                           onChange={(e) => setTempBio(e.target.value)}
                           className={`w-full px-3 py-2 rounded-xl border text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            isDarkMode ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'
+                            isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200'
                           }`}
                         ></textarea>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+
+                    <div className="flex items-center justify-end gap-2 pt-2">
+                      <button 
+                        onClick={() => setIsEditingProfile(false)}
+                        className="px-4 py-2 border text-xs font-medium rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      >
+                        Hủy
+                      </button>
                       <button 
                         onClick={() => {
                           setUserProfile({...userProfile, name: tempName, bio: tempBio});
@@ -1258,12 +1280,6 @@ export default function TravelPlanner() {
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition"
                       >
                         Lưu thay đổi
-                      </button>
-                      <button 
-                        onClick={() => setIsEditingProfile(false)}
-                        className="px-4 py-2 border text-xs font-medium rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                      >
-                        Hủy
                       </button>
                     </div>
                   </div>
