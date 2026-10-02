@@ -1119,13 +1119,132 @@ export default function TravelPlanner() {
           </div>
         )}
 
-        {/* CÁC TAB KHÁC DỰ PHÒNG */}
-        {['map', 'community'].includes(activeTab) && (
-          <div className={`p-12 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} text-center space-y-3`}>
-            <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200 capitalize">
-              Giao diện: {navItems.find(n => n.id === activeTab)?.label}
-            </h2>
-            <p className="text-slate-500 text-sm">Đang cập nhật nội dung cho mục này...</p>
+        {/* TAB BẢN ĐỒ */}
+        {activeTab === 'map' && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold">Bản Đồ Du Lịch Việt Nam</h1>
+              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Tra cứu không gian trực quan các điểm đến, quán ăn và di sản nổi bật
+              </p>
+            </div>
+
+            <div className={`p-4 rounded-2xl border overflow-hidden shadow-sm ${
+              isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+            }`}>
+              <div className="w-full h-[550px] rounded-xl overflow-hidden">
+                <iframe
+                  title="Google Map Viet Nam"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.494674620092!2d106.69830207688756!3d10.772033659223847!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f40a3b49e59%3A0xa1bd14e483a6c2db!2zTmjDoCBWxMSjbiBDaOG7pyBUaOG6oW4gSOG7kyBDaMOtIE1pbmg!5e0!3m2!1svi!2svn!4v1710000000000!5m2!1svi!2svn"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB GÓC CHIA SẺ */}
+        {activeTab === 'community' && (
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold">Góc Chia Sẻ & Review Du Lịch</h1>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Nơi cộng đồng chia sẻ những trải nghiệm thực tế, kinh nghiệm và hình ảnh các chuyến đi
+                </p>
+              </div>
+              <button 
+                onClick={() => alert('Tính năng đăng bài viết mới đang được mở rộng!')}
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 shrink-0"
+              >
+                <span>✏️ Viết bài review</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Bài viết mẫu 1 */}
+              <div className={`p-5 rounded-2xl border space-y-4 shadow-sm transition hover:shadow-md ${
+                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shadow">
+                    T
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Trần Minh Thư</h4>
+                    <p className="text-[11px] text-slate-400">Đã đăng 2 giờ trước • 📍 Đà Lạt</p>
+                  </div>
+                </div>
+
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Chuyến đi 3N2Đ săn mây Cầu Đất cực kỳ mãn nhãn. Thời tiết Đà Lạt tuần này se lạnh về đêm, ban ngày nắng vàng rất đẹp. Mọi người nhớ ghé tiệm cà phê Túi Mơ To sống ảo nhé, view đỉnh lắm ạ! ❤️
+                </p>
+
+                <div className="rounded-xl overflow-hidden h-48">
+                  <img 
+                    src="https://images.unsplash.com/photo-1574883391217-2165c7170131?auto=format&fit=crop&w=800&q=80" 
+                    alt="Review Đà Lạt" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t dark:border-slate-700 text-xs text-slate-500">
+                  <button className="flex items-center gap-1.5 hover:text-red-500 transition font-medium">
+                    <span>❤️ 128 Thích</span>
+                  </button>
+                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
+                    <span>💬 24 Bình luận</span>
+                  </button>
+                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
+                    <span>🔗 Chia sẻ</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bài viết mẫu 2 */}
+              <div className={`p-5 rounded-2xl border space-y-4 shadow-sm transition hover:shadow-md ${
+                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+              }`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow">
+                    H
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">Hoàng Nam</h4>
+                    <p className="text-[11px] text-slate-400">Đã đăng 1 ngày trước • 📍 Vịnh Hạ Long</p>
+                  </div>
+                </div>
+
+                <p className="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Lần đầu đi du thuyền khám phá Vịnh Hạ Long và thực sự không thất vọng chút nào. Cảnh quan kỳ vĩ, dịch vụ chuyên nghiệp. Khuyên mọi người nên chọn tour ngắm hoàng hôn trên vịnh nhé! 🌅
+                </p>
+
+                <div className="rounded-xl overflow-hidden h-48">
+                  <img 
+                    src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=800&q=80" 
+                    alt="Review Hạ Long" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t dark:border-slate-700 text-xs text-slate-500">
+                  <button className="flex items-center gap-1.5 hover:text-red-500 transition font-medium">
+                    <span>❤️ 256 Thích</span>
+                  </button>
+                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
+                    <span>💬 42 Bình luận</span>
+                  </button>
+                  <button className="flex items-center gap-1.5 hover:text-blue-500 transition font-medium">
+                    <span>🔗 Chia sẻ</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
