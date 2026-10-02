@@ -1187,7 +1187,7 @@ export default function TravelPlanner() {
 
                 <div className="rounded-xl overflow-hidden h-48">
                   <img 
-                    src="https://images.unsplash.com/photo-1574883391217-2165c7170131?auto=format&fit=crop&w=800&q=80" 
+                    src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" 
                     alt="Review Đà Lạt" 
                     className="w-full h-full object-cover"
                   />
