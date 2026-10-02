@@ -3,15 +3,42 @@
 import React, { useState } from 'react';
 import { 
   Home, MapPin, UtensilsCrossed, Store, Landmark, Calendar, 
-  Map, Share2, User, LogOut, Plus, Search, Trash2, Moon, Sun,
-  CheckCircle2, Clock, CheckSquare, Globe
+  Map, Share2, User, LogOut, Search, Moon, Sun,
+  ExternalLink, ArrowRight, Bot, Star, Heart, Plus, Clock
 } from 'lucide-react';
 
+import { destinationList, foodList, restaurantList, cultureList, categoryCards, trendingTags } from './data';
+
 export default function TravelPlanner() {
-  const [activeTab, setActiveTab] = useState('schedule');
+  const [activeTab, setActiveTab] = useState('home');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isLoginView, setIsLoginView] = useState(true);
+
+  // State bộ lọc trang chủ
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('destination');
+
+  // State bộ lọc Trang Điểm Đến
+  const [destSearch, setDestSearch] = useState('');
+  const [destRegion, setDestRegion] = useState('all');
+  const [destType, setDestType] = useState('all');
+
+  // State bộ lọc Trang Ẩm Thực
+  const [foodSearch, setFoodSearch] = useState('');
+  const [foodRegion, setFoodRegion] = useState('all');
+  const [foodCategory, setFoodCategory] = useState('all');
+
+  // State bộ lọc Trang Quán Ăn
+  const [restaurantSearch, setRestaurantSearch] = useState('');
+  const [restaurantRegion, setRestaurantRegion] = useState('all');
+  const [restaurantType, setRestaurantType] = useState('all');
+
+  // State bộ lọc Trang Văn Hóa
+  const [cultureSearch, setCultureSearch] = useState('');
+  const [cultureRegion, setCultureRegion] = useState('all');
+  const [cultureType, setCultureType] = useState('all');
 
   // State Tạo lịch trình
   const [trips, setTrips] = useState([
@@ -34,19 +61,49 @@ export default function TravelPlanner() {
   const [destination, setDestination] = useState('');
   const [budget, setBudget] = useState('');
   const [startDate, setStartDate] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // State thêm hoạt động & checklist
+  // State thêm hoạt động
   const [newActivity, setNewActivity] = useState('');
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [newCheckitem, setNewCheckitem] = useState('');
 
   // State Quy đổi tiền tệ
   const [amount, setAmount] = useState(100);
   const [currency, setCurrency] = useState('USD');
   const exchangeRates = { USD: 25400, EUR: 27500, JPY: 165, KRW: 18 };
 
-  // Xử lý tạo chuyến đi mới
+  // Các hàm lọc dữ liệu
+  const filteredDestinations = destinationList.filter((item) => {
+    const matchSearch = item.name.toLowerCase().includes(destSearch.toLowerCase()) || 
+                        item.location.toLowerCase().includes(destSearch.toLowerCase());
+    const matchRegion = destRegion === 'all' || item.region === destRegion;
+    const matchType = destType === 'all' || item.type === destType;
+    return matchSearch && matchRegion && matchType;
+  });
+
+  const filteredFood = foodList.filter((item) => {
+    const matchSearch = item.name.toLowerCase().includes(foodSearch.toLowerCase()) || 
+                        item.location.toLowerCase().includes(foodSearch.toLowerCase());
+    const matchRegion = foodRegion === 'all' || item.region === foodRegion;
+    const matchCategory = foodCategory === 'all' || item.category === foodCategory;
+    return matchSearch && matchRegion && matchCategory;
+  });
+
+  const filteredRestaurants = restaurantList.filter((item) => {
+    const matchSearch = item.name.toLowerCase().includes(restaurantSearch.toLowerCase()) || 
+                        item.address.toLowerCase().includes(restaurantSearch.toLowerCase());
+    const matchRegion = restaurantRegion === 'all' || item.region === restaurantRegion;
+    const matchType = restaurantType === 'all' || item.type === restaurantType;
+    return matchSearch && matchRegion && matchType;
+  });
+
+  const filteredCulture = cultureList.filter((item) => {
+    const matchSearch = item.name.toLowerCase().includes(cultureSearch.toLowerCase()) || 
+                        item.location.toLowerCase().includes(cultureSearch.toLowerCase());
+    const matchRegion = cultureRegion === 'all' || item.region === cultureRegion;
+    const matchType = cultureType === 'all' || item.type === cultureType;
+    return matchSearch && matchRegion && matchType;
+  });
+
   const handleCreateTrip = (e) => {
     e.preventDefault();
     if (!tripName || !destination) return;
@@ -68,9 +125,9 @@ export default function TravelPlanner() {
     setDestination('');
     setBudget('');
     setStartDate('');
+    setActiveTab('schedule');
   };
 
-  // Thêm hoạt động vào ngày được chọn
   const handleAddActivity = (e) => {
     e.preventDefault();
     if (!newActivity) return;
@@ -88,20 +145,6 @@ export default function TravelPlanner() {
     setNewActivity('');
   };
 
-  // Thêm hành lý
-  const handleAddChecklist = (e) => {
-    e.preventDefault();
-    if (!newCheckitem) return;
-    setTrips(trips.map(trip => {
-      if (trip.id === selectedTripId) {
-        return { ...trip, checklist: [...trip.checklist, newCheckitem] };
-      }
-      return trip;
-    }));
-    setNewCheckitem('');
-  };
-
-  // Danh sách Sidebar Menu bên trái
   const navItems = [
     { id: 'home', label: 'Trang chủ', icon: Home },
     { id: 'destinations', label: 'Điểm đến', icon: MapPin },
@@ -115,20 +158,17 @@ export default function TravelPlanner() {
 
   const currentTrip = trips.find(t => t.id === selectedTripId);
 
-  const filteredTrips = trips.filter(t => 
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    t.destination.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
-        <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 w-full max-w-md space-y-6">
+        <div className="bg-slate-800 p-8 rounded-2xl border border-slate-700 w-full max-w-md space-y-6 shadow-xl">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-blue-400">✈️ TravelPlanner Pro</h1>
+            <h1 className="text-2xl font-bold text-blue-500 flex items-center justify-center gap-2">
+              ✈️ TravelPlanner
+            </h1>
             <p className="text-xs text-slate-400">
-              {isLoginView ? 'Đăng nhập để quản lý lịch trình của bạn' : 'Tạo tài khoản mới'}
+              {isLoginView ? 'Đăng nhập để quản lý lịch trình' : 'Tạo tài khoản mới'}
             </p>
           </div>
 
@@ -164,13 +204,13 @@ export default function TravelPlanner() {
             </div>
             <button 
               type="submit" 
-              className="w-full py-3 bg-green-600 hover:bg-green-500 font-bold rounded-lg transition"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 font-bold rounded-lg transition shadow-md"
             >
               {isLoginView ? 'Đăng nhập' : 'Tạo tài khoản'}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-slate-400">
+          <div className="text-center text-sm text-slate-400">
             {isLoginView ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
             <button 
               className="text-blue-400 hover:underline font-semibold"
@@ -180,16 +220,16 @@ export default function TravelPlanner() {
             </button>
           </div>
 
-          <div className="mt-6 pt-5 border-t border-slate-700 text-center">
-            <p className="text-xs text-slate-400 mb-2">📌 Xem Mã nguồn dự án:</p>
-            <a 
-              href="https://github.com/nguyenthihuyentram/travel-planner" 
-              target="_blank" 
+          {/* Link GitHub ngay dưới nút đăng nhập */}
+          <div className="pt-2 border-t border-slate-700 text-center">
+            <a
+              href="https://github.com/nguyenthihuyentram/travel-planner"
+              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-blue-400 hover:text-blue-300 rounded-xl text-xs font-semibold transition"
+              className="text-xs text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1.5"
             >
-              <Globe size={16} />
-              <span>GitHub Repo ↗</span>
+              <span>Xem GitHub Repository của dự án</span>
+              <ExternalLink size={12} />
             </a>
           </div>
         </div>
@@ -197,21 +237,25 @@ export default function TravelPlanner() {
     );
   }
 
+  // GIAO DIỆN CHÍNH SAU KHI ĐĂNG NHẬP
   return (
-    <div className={`flex min-h-screen ${isDarkMode ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-800'}`}>
+    <div className={`flex min-h-screen ${isDarkMode ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-800'}`}>
       
-      {/* 1. THANH CÔNG CỤ DỌC BÊN TRÁI MÀN HÌNH (SIDEBAR) */}
+      {/* SIDEBAR BÊN TRÁI */}
       <aside className={`w-64 border-r flex flex-col justify-between h-screen sticky top-0 z-50 shrink-0 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
         <div>
-          {/* Logo */}
           <div 
-            className={`p-5 font-bold text-xl text-blue-500 border-b flex items-center justify-between cursor-pointer ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}
-            onClick={() => setActiveTab('schedule')}
+            className={`p-5 cursor-pointer ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}
+            onClick={() => setActiveTab('home')}
           >
-            <span className="flex items-center gap-2">✈️ TravelPlanner</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">✈️</span>
+              <span className="font-bold text-xl text-blue-500 tracking-tight">
+                TravelPlanner
+              </span>
+            </div>
           </div>
 
-          {/* Danh sách Menu */}
           <nav className="p-3 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -222,7 +266,7 @@ export default function TravelPlanner() {
                   onClick={() => setActiveTab(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                     isActive
-                      ? 'bg-red-50 text-red-600 dark:bg-slate-700 dark:text-red-400'
+                      ? 'bg-blue-50 text-blue-600 dark:bg-slate-700 dark:text-blue-400'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
@@ -232,12 +276,11 @@ export default function TravelPlanner() {
               );
             })}
 
-            {/* Nút Xem hồ sơ tài khoản */}
             <button
               onClick={() => setActiveTab('profile')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all mt-4 ${
                 activeTab === 'profile'
-                  ? 'bg-red-50 text-red-600 dark:bg-slate-700 dark:text-red-400'
+                  ? 'bg-blue-50 text-blue-600 dark:bg-slate-700 dark:text-blue-400'
                   : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
@@ -247,7 +290,6 @@ export default function TravelPlanner() {
           </nav>
         </div>
 
-        {/* Cụm chỉnh Darkmode & Khung Tài Khoản Đẹp */}
         <div className={`p-3 border-t space-y-2.5 ${isDarkMode ? 'border-slate-700 bg-slate-800/80' : 'border-slate-200 bg-slate-50'}`}>
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
@@ -257,14 +299,11 @@ export default function TravelPlanner() {
             <span>Chế độ {isDarkMode ? 'Sáng' : 'Tối'}</span>
           </button>
 
-          {/* KHUNG TÀI KHOẢN ĐƯỢC THIẾT KẾ ĐẸP MẮT */}
           <div className={`p-2.5 rounded-xl border flex items-center gap-2.5 ${isDarkMode ? 'bg-slate-700/60 border-slate-600' : 'bg-white border-slate-200 shadow-sm'}`}>
-            {/* Ảnh Avatar Đại Diện phía trước */}
             <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-sm shrink-0 shadow-sm">
               N
             </div>
             
-            {/* Thông tin Tên & Email */}
             <div className="flex-1 min-w-0">
               <p className="font-bold text-xs text-slate-800 dark:text-slate-100 truncate leading-tight">
                 Nguyễn Thị Huyền Trâm
@@ -274,7 +313,6 @@ export default function TravelPlanner() {
               </p>
             </div>
 
-            {/* Nút Đăng Xuất */}
             <button 
               onClick={() => setIsLoggedIn(false)}
               title="Đăng xuất"
@@ -286,20 +324,644 @@ export default function TravelPlanner() {
         </div>
       </aside>
 
-      {/* 2. KHU VỰC NỘI DUNG CHÍNH (BÊN PHẢI) */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        
+      {/* NỘI DUNG CHÍNH */}
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto relative">
+
+        {/* Nút Tư Vấn AI */}
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
+          <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-full shadow-lg font-bold text-xs transition">
+            <Bot size={18} />
+            <span>Tư vấn AI</span>
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+          </button>
+        </div>
+
+        {/* TAB TRANG CHỦ */}
+        {activeTab === 'home' && (
+          <div className="space-y-12">
+            <div className="relative rounded-3xl overflow-hidden min-h-[420px] flex flex-col justify-center items-center text-center p-6 md:p-12 bg-cover bg-center shadow-xl"
+                 style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.55)), url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80')` }}>
+              
+              <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-5 md:p-6 rounded-2xl shadow-2xl max-w-4xl w-full text-left space-y-4 text-slate-800 dark:text-white border border-white/20">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  <div className="md:col-span-5 space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ĐIỂM ĐẾN HOẶC MÓN ĂN</label>
+                    <input 
+                      type="text"
+                      placeholder="Hạ Long, Hội An, Phở bò, Tràng An..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="md:col-span-3 space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">VÙNG MIỀN</label>
+                    <select 
+                      value={selectedRegion}
+                      onChange={(e) => setSelectedRegion(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium outline-none focus:border-blue-500 cursor-pointer"
+                    >
+                      <option value="all">Toàn bộ 3 miền</option>
+                      <option value="north">Miền Bắc</option>
+                      <option value="central">Miền Trung</option>
+                      <option value="south">Miền Nam</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">TRẢI NGHIỆM</label>
+                    <select 
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium outline-none focus:border-blue-500 cursor-pointer"
+                    >
+                      <option value="destination">Điểm đến</option>
+                      <option value="food">Ẩm thực</option>
+                      <option value="culture">Văn hóa</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2 flex items-end">
+                    <button 
+                      onClick={() => setActiveTab('destinations')}
+                      className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md"
+                    >
+                      <span>Khám phá ngay</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-slate-500 dark:text-slate-400 font-semibold">Điểm đến thịnh hành:</span>
+                    {trendingTags.map((tag, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => { setDestSearch(tag); setActiveTab('destinations'); }}
+                        className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 font-medium transition"
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Trải Nghiệm Đa Dạng</p>
+                  <h2 className="text-2xl md:text-3xl font-extrabold">Hành Trình Theo Phong Cách Của Bạn</h2>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {categoryCards.map((card) => (
+                  <div 
+                    key={card.id}
+                    onClick={() => setActiveTab('destinations')}
+                    className={`group relative rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer ${
+                      isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={card.image} 
+                        alt={card.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <span className={`absolute top-3 left-3 ${card.badgeBg} text-white font-bold text-[10px] uppercase px-2.5 py-1 rounded-full shadow`}>
+                        {card.badge}
+                      </span>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <h3 className="font-bold text-base group-hover:text-blue-600 transition-colors">{card.title}</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{card.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB ĐIỂM ĐẾN */}
+        {activeTab === 'destinations' && (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold">Danh Sách Điểm Đến Hấp Dẫn</h1>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Khám phá danh thắng, di sản và địa điểm nghỉ dưỡng nổi tiếng khắp Việt Nam
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center gap-3 ${
+                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
+              }`}>
+                <div className="relative flex-1 w-full">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text"
+                    placeholder="Tìm tên điểm đến hoặc tỉnh thành..."
+                    value={destSearch}
+                    onChange={(e) => setDestSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <select 
+                  value={destRegion}
+                  onChange={(e) => setDestRegion(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Tất cả Miền</option>
+                  <option value="north">Miền Bắc</option>
+                  <option value="central">Miền Trung</option>
+                  <option value="south">Miền Nam</option>
+                </select>
+
+                <select 
+                  value={destType}
+                  onChange={(e) => setDestType(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Loại hình (Tất cả)</option>
+                  <option value="beach">Biển đảo</option>
+                  <option value="mountain">Núi rừng / Săn mây</option>
+                  <option value="culture">Văn hóa / Lịch sử</option>
+                </select>
+              </div>
+            </div>
+
+            {filteredDestinations.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDestinations.map((item) => (
+                  <div 
+                    key={item.id}
+                    className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between ${
+                      isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div>
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <span className="absolute top-3 left-3 bg-blue-600 text-white font-bold text-[10px] uppercase px-2.5 py-1 rounded-full shadow">
+                          {item.tag}
+                        </span>
+                        <button className="absolute top-3 right-3 p-2 bg-white/80 dark:bg-slate-800/80 hover:bg-white backdrop-blur-md rounded-full text-slate-600 dark:text-white transition">
+                          <Heart size={16} />
+                        </button>
+                      </div>
+
+                      <div className="p-5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                            <MapPin size={13} />
+                            {item.location}
+                          </span>
+                          <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                            <Star size={14} className="fill-amber-400 text-amber-400" />
+                            <span>{item.rating}</span>
+                            <span className="text-slate-400 font-normal">({item.reviews})</span>
+                          </div>
+                        </div>
+
+                        <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors">
+                          {item.name}
+                        </h3>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                      <button 
+                        onClick={() => {
+                          setDestination(item.name);
+                          setActiveTab('schedule');
+                        }}
+                        className="w-full py-2 bg-blue-50 dark:bg-slate-700 hover:bg-blue-600 hover:text-white text-blue-600 dark:text-blue-400 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1"
+                      >
+                        <Plus size={14} />
+                        <span>Thêm vào lịch trình</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`p-12 text-center rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <p className="text-slate-500 text-sm">Không tìm thấy điểm đến nào phù hợp với từ khóa của bạn.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB ẨM THỰC */}
+        {activeTab === 'food' && (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold">Khám Phá Ẩm Thực Việt Nam</h1>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Thưởng thức các món ăn đặc sản 3 miền hấp dẫn và chuẩn vị nhất
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center gap-3 ${
+                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
+              }`}>
+                <div className="relative flex-1 w-full">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text"
+                    placeholder="Tìm tên món ăn (Phở, Bún bò, Bánh mì...)"
+                    value={foodSearch}
+                    onChange={(e) => setFoodSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <select 
+                  value={foodRegion}
+                  onChange={(e) => setFoodRegion(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Tất cả Miền</option>
+                  <option value="north">Ẩm thực Miền Bắc</option>
+                  <option value="central">Ẩm thực Miền Trung</option>
+                  <option value="south">Ẩm thực Miền Nam</option>
+                </select>
+
+                <select 
+                  value={foodCategory}
+                  onChange={(e) => setFoodCategory(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Thể loại (Tất cả)</option>
+                  <option value="noodle">Món Bún / Phở / Mì</option>
+                  <option value="rice">Món Cơm / Lẩu / Cá</option>
+                  <option value="streetfood">Ăn vặt / Bánh ngọt</option>
+                </select>
+              </div>
+            </div>
+
+            {filteredFood.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredFood.map((item) => (
+                  <div 
+                    key={item.id}
+                    className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between ${
+                      isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div>
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <span className="absolute top-3 left-3 bg-red-600 text-white font-bold text-[10px] uppercase px-2.5 py-1 rounded-full shadow">
+                          {item.tag}
+                        </span>
+                        <button className="absolute top-3 right-3 p-2 bg-white/80 dark:bg-slate-800/80 hover:bg-white backdrop-blur-md rounded-full text-slate-600 dark:text-white transition">
+                          <Heart size={16} />
+                        </button>
+                      </div>
+
+                      <div className="p-5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-red-500 flex items-center gap-1">
+                            <UtensilsCrossed size={13} />
+                            {item.location}
+                          </span>
+                          <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                            <Star size={14} className="fill-amber-400 text-amber-400" />
+                            <span>{item.rating}</span>
+                            <span className="text-slate-400 font-normal">({item.reviews})</span>
+                          </div>
+                        </div>
+
+                        <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors">
+                          {item.name}
+                        </h3>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                          {item.description}
+                        </p>
+
+                        <div className="pt-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                          💵 Giá khoảng: <span className="text-emerald-600 dark:text-emerald-400">{item.price}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                      <button 
+                        onClick={() => {
+                          if (currentTrip) {
+                            const updatedDays = [...currentTrip.days];
+                            updatedDays[0].activities.push(`Thưởng thức món ${item.name}`);
+                            setTrips(trips.map(t => t.id === selectedTripId ? { ...t, days: updatedDays } : t));
+                          }
+                          setActiveTab('schedule');
+                        }}
+                        className="w-full py-2 bg-red-50 dark:bg-slate-700 hover:bg-red-600 hover:text-white text-red-600 dark:text-red-400 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1"
+                      >
+                        <Plus size={14} />
+                        <span>Thêm vào lịch trình ăn uống</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`p-12 text-center rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <p className="text-slate-500 text-sm">Không tìm thấy món ăn nào phù hợp với từ khóa của bạn.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB QUÁN ĂN */}
+        {activeTab === 'restaurants' && (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold">Top Quán Ăn & Nhà Hàng Nổi Tiếng</h1>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Danh sách quán ăn ngon chuẩn vị, chất lượng hàng đầu được cộng đồng du lịch yêu thích
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center gap-3 ${
+                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
+              }`}>
+                <div className="relative flex-1 w-full">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text"
+                    placeholder="Tìm tên quán ăn, địa chỉ..."
+                    value={restaurantSearch}
+                    onChange={(e) => setRestaurantSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <select 
+                  value={restaurantRegion}
+                  onChange={(e) => setRestaurantRegion(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Tất cả Miền</option>
+                  <option value="north">Miền Bắc</option>
+                  <option value="central">Miền Trung</option>
+                  <option value="south">Miền Nam</option>
+                </select>
+
+                <select 
+                  value={restaurantType}
+                  onChange={(e) => setRestaurantType(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Mô hình (Tất cả)</option>
+                  <option value="traditional">Quán truyền thống</option>
+                  <option value="restaurant">Nhà hàng</option>
+                  <option value="street">Quán vỉa hè / Bánh mì</option>
+                </select>
+              </div>
+            </div>
+
+            {filteredRestaurants.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredRestaurants.map((item) => (
+                  <div 
+                    key={item.id}
+                    className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between ${
+                      isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div>
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <span className="absolute top-3 left-3 bg-emerald-600 text-white font-bold text-[10px] uppercase px-2.5 py-1 rounded-full shadow">
+                          {item.tag}
+                        </span>
+                        <button className="absolute top-3 right-3 p-2 bg-white/80 dark:bg-slate-800/80 hover:bg-white backdrop-blur-md rounded-full text-slate-600 dark:text-white transition">
+                          <Heart size={16} />
+                        </button>
+                      </div>
+
+                      <div className="p-5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <Store size={13} />
+                            {item.openTime}
+                          </span>
+                          <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                            <Star size={14} className="fill-amber-400 text-amber-400" />
+                            <span>{item.rating}</span>
+                            <span className="text-slate-400 font-normal">({item.reviews})</span>
+                          </div>
+                        </div>
+
+                        <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors">
+                          {item.name}
+                        </h3>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1">
+                          <MapPin size={13} className="shrink-0 mt-0.5 text-blue-500" />
+                          <span>{item.address}</span>
+                        </p>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                          {item.description}
+                        </p>
+
+                        <div className="pt-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                          💵 Mức giá: <span className="text-emerald-600 dark:text-emerald-400">{item.price}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                      <button 
+                        onClick={() => {
+                          if (currentTrip) {
+                            const updatedDays = [...currentTrip.days];
+                            updatedDays[0].activities.push(`Ghé quán: ${item.name} (${item.address})`);
+                            setTrips(trips.map(t => t.id === selectedTripId ? { ...t, days: updatedDays } : t));
+                          }
+                          setActiveTab('schedule');
+                        }}
+                        className="w-full py-2 bg-emerald-50 dark:bg-slate-700 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1"
+                      >
+                        <Plus size={14} />
+                        <span>Thêm địa điểm vào lịch trình</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`p-12 text-center rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <p className="text-slate-500 text-sm">Không tìm thấy quán ăn nào phù hợp với tìm kiếm của bạn.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB VĂN HÓA */}
+        {activeTab === 'culture' && (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-extrabold">Di Sản, Lễ Hội & Văn Hóa Việt Nam</h1>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Khám phá các di sản văn hóa phi vật thể, lễ hội truyền thống và làng nghề đặc sắc
+                </p>
+              </div>
+
+              <div className={`p-4 rounded-2xl border flex flex-col md:flex-row items-center gap-3 ${
+                isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200 shadow-sm'
+              }`}>
+                <div className="relative flex-1 w-full">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input 
+                    type="text"
+                    placeholder="Tìm tên di sản, lễ hội, địa điểm..."
+                    value={cultureSearch}
+                    onChange={(e) => setCultureSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <select 
+                  value={cultureRegion}
+                  onChange={(e) => setCultureRegion(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Tất cả Miền</option>
+                  <option value="north">Miền Bắc</option>
+                  <option value="central">Miền Trung</option>
+                  <option value="south">Miền Nam</option>
+                </select>
+
+                <select 
+                  value={cultureType}
+                  onChange={(e) => setCultureType(e.target.value)}
+                  className="w-full md:w-44 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium outline-none cursor-pointer"
+                >
+                  <option value="all">Phân loại (Tất cả)</option>
+                  <option value="heritage">Di sản UNESCO</option>
+                  <option value="festival">Lễ hội truyền thống</option>
+                  <option value="village">Làng nghề thủ công</option>
+                </select>
+              </div>
+            </div>
+
+            {filteredCulture.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCulture.map((item) => (
+                  <div 
+                    key={item.id}
+                    className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between ${
+                      isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div>
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <span className="absolute top-3 left-3 bg-amber-600 text-white font-bold text-[10px] uppercase px-2.5 py-1 rounded-full shadow">
+                          {item.tag}
+                        </span>
+                        <button className="absolute top-3 right-3 p-2 bg-white/80 dark:bg-slate-800/80 hover:bg-white backdrop-blur-md rounded-full text-slate-600 dark:text-white transition">
+                          <Heart size={16} />
+                        </button>
+                      </div>
+
+                      <div className="p-5 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            <Landmark size={13} />
+                            {item.location}
+                          </span>
+                          <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                            <Star size={14} className="fill-amber-400 text-amber-400" />
+                            <span>{item.rating}</span>
+                            <span className="text-slate-400 font-normal">({item.reviews})</span>
+                          </div>
+                        </div>
+
+                        <h3 className="text-lg font-bold group-hover:text-blue-600 transition-colors">
+                          {item.name}
+                        </h3>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <Calendar size={13} className="text-blue-500 shrink-0" />
+                          <span>Thời gian: <strong className="text-slate-700 dark:text-slate-200">{item.time}</strong></span>
+                        </p>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="px-5 pb-5 pt-2 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
+                      <button 
+                        onClick={() => {
+                          if (currentTrip) {
+                            const updatedDays = [...currentTrip.days];
+                            updatedDays[0].activities.push(`Khám phá văn hóa: ${item.name} tại ${item.location}`);
+                            setTrips(trips.map(t => t.id === selectedTripId ? { ...t, days: updatedDays } : t));
+                          }
+                          setActiveTab('schedule');
+                        }}
+                        className="w-full py-2 bg-amber-50 dark:bg-slate-700 hover:bg-amber-600 hover:text-white text-amber-600 dark:text-amber-400 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1"
+                      >
+                        <Plus size={14} />
+                        <span>Thêm vào lịch trình trải nghiệm</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`p-12 text-center rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <p className="text-slate-500 text-sm">Không tìm thấy thông tin văn hóa nào phù hợp với tìm kiếm của bạn.</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB LỊCH TRÌNH */}
         {activeTab === 'schedule' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* Cột trái (4 cột) */}
             <div className="lg:col-span-5 xl:col-span-4 space-y-6">
-              
-              {/* Form Tạo Lịch Trình */}
               <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} space-y-4`}>
                 <h2 className="font-bold text-base flex items-center gap-2">
-                  <span className="text-blue-500">┼</span> Tạo Lịch Trình Mới
+                  <span className="text-blue-600">┼</span> Tạo Lịch Trình Mới
                 </h2>
                 <form onSubmit={handleCreateTrip} className="space-y-3">
                   <input
@@ -335,14 +997,13 @@ export default function TravelPlanner() {
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition"
+                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition shadow"
                   >
                     Khởi Tạo Chuyến Đi
                   </button>
                 </form>
               </div>
 
-              {/* Box Quy Đổi Tiền Tệ */}
               <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} space-y-4`}>
                 <h2 className="font-bold text-base flex items-center gap-2">
                   <span>💱</span> Quy Đổi Tiền Tệ
@@ -372,60 +1033,11 @@ export default function TravelPlanner() {
                   </p>
                 </div>
               </div>
-
-              {/* Danh sách chuyến đi */}
-              <div className={`p-5 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} space-y-4`}>
-                <div className="flex justify-between items-center">
-                  <h2 className="font-bold text-base">Danh Sách ({trips.length})</h2>
-                  <input
-                    type="text"
-                    placeholder="🔍 Tìm..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-3 py-1 border rounded-lg text-xs w-28 outline-none dark:bg-slate-700 dark:border-slate-600"
-                  />
-                </div>
-                {filteredTrips.length === 0 ? (
-                  <p className="text-xs text-slate-400 text-center py-4">Chưa có chuyến đi nào.</p>
-                ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {filteredTrips.map((item) => (
-                      <div 
-                        key={item.id} 
-                        onClick={() => setSelectedTripId(item.id)}
-                        className={`p-3 border rounded-xl flex justify-between items-center cursor-pointer transition ${
-                          selectedTripId === item.id 
-                            ? 'border-blue-500 bg-blue-50/30 dark:bg-slate-700' 
-                            : 'border-slate-200 dark:border-slate-700'
-                        }`}
-                      >
-                        <div>
-                          <p className="font-semibold text-sm">{item.name}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400">📍 {item.destination} - 💰 {item.budget}</p>
-                        </div>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTrips(trips.filter(t => t.id !== item.id));
-                          }}
-                          className="text-red-500 text-xs hover:underline"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
             </div>
 
-            {/* Cột phải (8 cột) - Chi tiết Kế hoạch chuyến đi */}
             <div className="lg:col-span-7 xl:col-span-8 space-y-6">
               {currentTrip ? (
-                <div className={`p-6 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} space-y-6`}>
-                  
-                  {/* Header chuyến đi đang chọn */}
+                <div className={`p-6 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} space-y-6 shadow-sm`}>
                   <div className="flex justify-between items-start border-b pb-4 dark:border-slate-700">
                     <div>
                       <h1 className="text-2xl font-bold">{currentTrip.name}</h1>
@@ -437,17 +1049,16 @@ export default function TravelPlanner() {
                     </div>
                   </div>
 
-                  {/* Lịch trình chi tiết */}
                   <div className="space-y-4">
                     <h3 className="font-bold text-lg flex items-center gap-2">
-                      <Clock size={18} className="text-blue-500" /> Chi Tiết Lịch Trình Theo Ngày
+                      <Clock size={18} className="text-blue-600" /> Chi Tiết Lịch Trình
                     </h3>
                     
                     <form onSubmit={handleAddActivity} className="flex gap-2">
                       <select 
                         value={selectedDayIndex} 
                         onChange={(e) => setSelectedDayIndex(Number(e.target.value))}
-                        className="px-3 py-2 border rounded-xl text-sm dark:bg-slate-700 dark:border-slate-600"
+                        className="px-3 py-2 border rounded-xl text-sm dark:bg-slate-700 dark:border-slate-600 outline-none"
                       >
                         <option value={0}>Ngày 1</option>
                         <option value={1}>Ngày 2</option>
@@ -455,12 +1066,12 @@ export default function TravelPlanner() {
                       </select>
                       <input 
                         type="text" 
-                        placeholder="Thêm hoạt động (VD: Ăn sáng Phở Thìn lúc 8:00)..." 
+                        placeholder="Thêm hoạt động..." 
                         value={newActivity}
                         onChange={(e) => setNewActivity(e.target.value)}
                         className="flex-1 px-4 py-2 border rounded-xl text-sm outline-none dark:bg-slate-700 dark:border-slate-600"
                       />
-                      <button type="submit" className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700">
+                      <button type="submit" className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition">
                         Thêm
                       </button>
                     </form>
@@ -473,7 +1084,7 @@ export default function TravelPlanner() {
                             {dayItem.activities.length > 0 ? (
                               dayItem.activities.map((act, actIdx) => (
                                 <li key={actIdx} className="flex items-center gap-2">
-                                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                  <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
                                   <span>{act}</span>
                                 </li>
                               ))
@@ -485,51 +1096,19 @@ export default function TravelPlanner() {
                       ))}
                     </div>
                   </div>
-
-                  {/* Checklist Đồ dùng */}
-                  <div className="space-y-4 border-t pt-6 dark:border-slate-700">
-                    <h3 className="font-bold text-lg flex items-center gap-2">
-                      <CheckSquare size={18} className="text-green-500" /> Hành Lý & Công Việc Cần Chuẩn Bị
-                    </h3>
-
-                    <form onSubmit={handleAddChecklist} className="flex gap-2">
-                      <input 
-                        type="text" 
-                        placeholder="Thêm đồ dùng cần mang (VD: Sạc dự phòng)..." 
-                        value={newCheckitem}
-                        onChange={(e) => setNewCheckitem(e.target.value)}
-                        className="flex-1 px-4 py-2 border rounded-xl text-sm outline-none dark:bg-slate-700 dark:border-slate-600"
-                      />
-                      <button type="submit" className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700">
-                        Thêm Đồ
-                      </button>
-                    </form>
-
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {currentTrip.checklist.map((item, idx) => (
-                        <span key={idx} className="px-3 py-1.5 bg-green-50 dark:bg-slate-700 text-green-700 dark:text-green-300 border border-green-200 dark:border-slate-600 text-xs font-semibold rounded-lg flex items-center gap-1.5">
-                          <CheckCircle2 size={14} /> {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
                 </div>
               ) : (
                 <div className={`p-12 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} min-h-[400px] flex items-center justify-center text-center`}>
-                  <p className="text-slate-400 text-sm">
-                    Vui lòng chọn hoặc tạo một chuyến đi mới từ danh sách bên trái.
-                  </p>
+                  <p className="text-slate-400 text-sm">Vui lòng tạo chuyến đi.</p>
                 </div>
               )}
             </div>
-
           </div>
         )}
 
-        {/* TAB XEM HỒ SƠ TÀI KHOẢN */}
+        {/* TAB HỒ SƠ TÀI KHOẢN */}
         {activeTab === 'profile' && (
-          <div className={`max-w-md mx-auto p-6 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} text-center space-y-4`}>
+          <div className={`max-w-md mx-auto p-6 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} text-center space-y-4 shadow-sm`}>
             <div className="w-20 h-20 bg-blue-600 text-white font-bold rounded-full flex items-center justify-center mx-auto text-3xl shadow-md">
               N
             </div>
@@ -537,32 +1116,16 @@ export default function TravelPlanner() {
               <h2 className="text-xl font-bold">Nguyễn Thị Huyền Trâm</h2>
               <p className="text-slate-500 text-sm">tram592005@gmail.com</p>
             </div>
-            <div className="border-t pt-4 text-left space-y-2 text-sm dark:border-slate-700">
-              <p><strong>Vai trò:</strong> Thành viên Pro</p>
-              <p><strong>Tổng số chuyến đi đã tạo:</strong> {trips.length}</p>
-            </div>
-
-            <div className="pt-4 border-t dark:border-slate-700">
-              <a 
-                href="https://github.com/nguyenthihuyentram/travel-planner" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-semibold hover:bg-slate-700 transition"
-              >
-                <Globe size={16} />
-                <span>Xem GitHub Repository ↗</span>
-              </a>
-            </div>
           </div>
         )}
 
-        {/* CÁC TAB KHÁC */}
-        {['home', 'destinations', 'food', 'restaurants', 'culture', 'map', 'community'].includes(activeTab) && (
+        {/* CÁC TAB KHÁC DỰ PHÒNG */}
+        {['map', 'community'].includes(activeTab) && (
           <div className={`p-12 rounded-2xl border ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} text-center space-y-3`}>
             <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-200 capitalize">
               Giao diện: {navItems.find(n => n.id === activeTab)?.label}
             </h2>
-            <p className="text-slate-500 text-sm">Nội dung chi tiết của tính năng này đang được cập nhật...</p>
+            <p className="text-slate-500 text-sm">Đang cập nhật nội dung cho mục này...</p>
           </div>
         )}
 
