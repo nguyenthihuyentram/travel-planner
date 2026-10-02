@@ -12,7 +12,7 @@ import { destinationList, foodList, restaurantList, cultureList, categoryCards, 
 export default function TravelPlanner() {
   const [activeTab, setActiveTab] = useState('home');
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginView, setIsLoginView] = useState(true);
 
   // State bộ lọc trang chủ
