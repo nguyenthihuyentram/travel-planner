@@ -40,6 +40,36 @@ export default function TravelPlanner() {
   const [cultureRegion, setCultureRegion] = useState('all');
   const [cultureType, setCultureType] = useState('all');
 
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [aiInput, setAiInput] = useState('');
+  const [aiMessages, setAiMessages] = useState([
+  { sender: 'ai', text: 'Xin chào! Tôi là trợ lý AI du lịch TravelPlanner. Bạn muốn tôi tư vấn lịch trình hoặc địa điểm nào không?' }
+]);
+const handleSendAIMessage = (e) => {
+  e.preventDefault();
+  if (!aiInput.trim()) return;
+
+  const userMsg = aiInput;
+  setAiMessages(prev => [...prev, { sender: 'user', text: userMsg }]);
+  setAiInput('');
+
+  // Giả lập AI trả lời thông minh sau 1 giây
+  setTimeout(() => {
+    let reply = "Tôi đã ghi nhận yêu cầu của bạn. TravelPlanner có rất nhiều điểm đến và quán ăn tuyệt vời phù hợp với lịch trình này!";
+    const lower = userMsg.toLowerCase();
+    
+    if (lower.includes('đà nẵng')) {
+      reply = "Đà Nẵng rất tuyệt! Bạn nên ghé thăm Bà Nà Hills, Cầu Rồng và thưởng thức mì Quảng, bánh xèo đặc sản nhé.";
+    } else if (lower.includes('hà nội')) {
+      reply = "Thủ đô Hà Nội nổi tiếng với Phố cổ, Hồ Gươm, lẩu mắm và phở Hà Nội. Bạn có muốn tôi lập lịch trình 2 ngày 1 đêm không?";
+    } else if (lower.includes('lịch trình') || lower.includes('gợi ý')) {
+      reply = "Để lập lịch trình tốt nhất, bạn có thể chọn tab 'Lịch trình' trên menu bên trái để hệ thống tự động sắp xếp chi tiết các mốc thời gian cho bạn!";
+    }
+
+    setAiMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+  }, 1000);
+};
+  
   // State Tạo lịch trình
   const [trips, setTrips] = useState([
     {
@@ -1317,6 +1347,81 @@ export default function TravelPlanner() {
             </div>
           </div>
         )}
+
+        {/* NÚT VÀ KHUNG CỬA SỔ TƯ VẤN AI */}
+        <div className="fixed bottom-6 right-6 z-50">
+          {/* Cửa sổ chat box */}
+          {isAIChatOpen && (
+            <div className={`mb-3 w-80 sm:w-96 rounded-2xl shadow-2xl border flex flex-col overflow-hidden transition-all duration-300 ${
+              isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-800'
+            }`}>
+              {/* Header chat */}
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🤖</span>
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider">Trợ lý AI TravelPlanner</h3>
+                    <p className="text-[10px] text-blue-100 flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span> Trực tuyến sẵn sàng hỗ trợ
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsAIChatOpen(false)}
+                  className="text-white/80 hover:text-white text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 transition"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Danh sách tin nhắn */}
+              <div className="p-4 h-72 overflow-y-auto space-y-3 text-xs flex flex-col">
+                {aiMessages.map((msg, index) => (
+                  <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-2xl leading-relaxed ${
+                      msg.sender === 'user' 
+                        ? 'bg-blue-600 text-white rounded-br-none shadow-sm' 
+                        : isDarkMode ? 'bg-slate-700 text-slate-200 rounded-bl-none' : 'bg-slate-100 text-slate-700 rounded-bl-none'
+                    }`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Form nhập tin nhắn */}
+              <form onSubmit={handleSendAIMessage} className={`p-3 border-t flex items-center gap-2 ${
+                isDarkMode ? 'border-slate-700 bg-slate-900/50' : 'border-slate-100 bg-slate-50'
+              }`}>
+                <input 
+                  type="text"
+                  value={aiInput}
+                  onChange={(e) => setAiInput(e.target.value)}
+                  placeholder="Nhập câu hỏi du lịch của bạn..."
+                  className={`flex-1 px-3 py-2 text-xs rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-500' : 'bg-white border-slate-200 text-slate-800'
+                  }`}
+                />
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition shrink-0"
+                >
+                  Gửi
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Nút bấm nổi mở khung chat */}
+          <button 
+            onClick={() => setIsAIChatOpen(!isAIChatOpen)}
+            className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-full shadow-xl flex items-center gap-2 transition-all transform hover:scale-105"
+          >
+            <span className="text-base">🤖</span>
+            <span>Tư vấn AI</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+          </button>
+        </div>
 
         {/* TAB GÓC CHIA SẺ */}
         {activeTab === 'community' && (
